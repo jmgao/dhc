@@ -19,7 +19,7 @@ static FARPROC WINAPI GetXInputProc(const char* proc_name) {
   return result;
 }
 
-struct PassthroughXInput : public XInputImplementation {
+struct PassthroughXInput : public dhc::XInputImplementation {
   virtual DWORD GetState(DWORD user_index, XINPUT_STATE* state) override final {
     static auto real = reinterpret_cast<decltype(&XInputGetState)>(GetXInputProc("XInputGetState"));
     DWORD rc = real(user_index, state);
@@ -71,7 +71,7 @@ struct PassthroughXInput : public XInputImplementation {
   }
 };
 
-struct EmptyXInput : public XInputImplementation {
+struct EmptyXInput : public dhc::XInputImplementation {
   virtual DWORD GetState(DWORD user_index, XINPUT_STATE* state) override final {
     return ERROR_DEVICE_NOT_CONNECTED;
   }
@@ -107,7 +107,7 @@ struct EmptyXInput : public XInputImplementation {
   }
 };
 
-XInputImplementation& XInputImplementation::Instance() {
+dhc::XInputImplementation& dhc::XInputImplementation::Instance() {
 #if 1
   return EmptyXInput::Instance();
 #else

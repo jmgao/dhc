@@ -2,6 +2,8 @@
 
 #include "dhc.h"
 
+namespace dhc {
+
 struct XInputImplementation {
   DHC_API virtual DWORD GetState(DWORD, XINPUT_STATE*) = 0;
   DHC_API virtual DWORD SetState(DWORD, XINPUT_VIBRATION*) = 0;
@@ -13,3 +15,5 @@ struct XInputImplementation {
 
   static DHC_API XInputImplementation& Instance();
 };
+
+}  // namespace dhc
