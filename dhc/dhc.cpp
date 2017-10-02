@@ -13,7 +13,7 @@ BOOL WINAPI DllMain(HMODULE module, DWORD reason, void*) {
       InitLogging(nullptr);
       CreateLogConsole();
       CreateLogFile("log.txt");
-      SetMinimumLogSeverity(INFO);
+      SetMinimumLogSeverity(VERBOSE);
       break;
 
     case DLL_THREAD_ATTACH:

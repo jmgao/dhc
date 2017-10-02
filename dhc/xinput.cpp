@@ -5,13 +5,14 @@
 #include <Xinput.h>
 
 #include "logging.h"
+#include "utils.h"
 #include "xinput.h"
 
 // This declaration is hidden when targeting Windows 8 or newer.
 DWORD WINAPI XInputGetDSoundAudioDeviceGuids(DWORD user_index, GUID* render_guid, GUID* capture_guid);
 
 static FARPROC WINAPI GetXInputProc(const char* proc_name) {
-  static HMODULE real = LoadSystemLibrary(L"xinput1_3.dll");
+  static HMODULE real = dhc::LoadSystemLibrary(L"xinput1_3.dll");
   FARPROC result = GetProcAddress(real, proc_name);
   if (!result) {
     LOG(FATAL) << "failed to resolve symbol '" << proc_name << "'";

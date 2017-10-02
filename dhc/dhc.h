@@ -9,5 +9,3 @@
 #else
 #define DHC_API __declspec(dllimport)
 #endif
-
-DHC_API HMODULE LoadSystemLibrary(const std::wstring& name);

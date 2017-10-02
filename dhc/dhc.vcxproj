@@ -148,13 +148,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="dhc.h" />
+    <ClInclude Include="dinput.h" />
     <ClInclude Include="logging.h" />
+    <ClInclude Include="utils.h" />
     <ClInclude Include="xinput.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dhc.cpp" />
+    <ClCompile Include="dinput.cpp" />
     <ClCompile Include="logging.cpp" />
-    <ClCompile Include="util.cpp" />
+    <ClCompile Include="utils.cpp" />
     <ClCompile Include="xinput.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

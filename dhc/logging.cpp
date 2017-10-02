@@ -108,6 +108,7 @@ void DefaultLogger(LogId, LogSeverity severity, const char*, const char* file, u
   }
   if (file_out) {
     fwrite(buf, rc, 1, file_out);
+    fflush(file_out);
   }
 }
 

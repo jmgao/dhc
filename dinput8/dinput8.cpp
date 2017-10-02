@@ -5,7 +5,9 @@
 #include <windows.h>
 
 #include "dhc/dhc.h"
+#include "dhc/dinput.h"
 #include "dhc/logging.h"
+#include "dhc/utils.h"
 
 using namespace dhc::logging;
 
@@ -24,7 +26,7 @@ BOOL WINAPI DllMain(HMODULE module, DWORD reason, void*) {
 }
 
 static FARPROC WINAPI GetDirectInputProc(const char* proc_name) {
-  static HMODULE real = LoadSystemLibrary(L"dinput8.dll");
+  static HMODULE real = dhc::LoadSystemLibrary(L"dinput8.dll");
   return GetProcAddress(real, proc_name);
 }
 
@@ -35,8 +37,23 @@ extern "C" HRESULT WINAPI DirectInput8Create(HINSTANCE hinst, DWORD version, REF
   }
 
   LOG(INFO) << "requested DirectInput8 " << (unicode ? "unicode" : "ascii") << " interface, with" << (unknown ? "" : "out") << " COM interface";
+
+#if 0
+  // Passthrough
   static auto real = reinterpret_cast<decltype(&DirectInput8Create)>(GetDirectInputProc("DirectInput8Create"));
   return real(hinst, version, desired_interface, out_interface, unknown);
+#else
+  IUnknown* result;
+  if (unicode) {
+    result = dhc::GetEmulatedDirectInput8W();
+  } else {
+    result = dhc::GetEmulatedDirectInput8W();
+  }
+
+  result->AddRef();
+  *out_interface = result;
+  return DI_OK;
+#endif
 }
 
 extern "C" HRESULT WINAPI DllCanUnloadNow() {
