@@ -25,11 +25,6 @@ BOOL WINAPI DllMain(HMODULE module, DWORD reason, void*) {
   return TRUE;
 }
 
-static FARPROC WINAPI GetDirectInputProc(const char* proc_name) {
-  static HMODULE real = dhc::LoadSystemLibrary(L"dinput8.dll");
-  return GetProcAddress(real, proc_name);
-}
-
 extern "C" HRESULT WINAPI DirectInput8Create(HINSTANCE hinst, DWORD version, REFIID desired_interface, void** out_interface, IUnknown* unknown) {
   bool unicode = desired_interface == IID_IDirectInput8W;
   if (!unicode) {
@@ -40,7 +35,7 @@ extern "C" HRESULT WINAPI DirectInput8Create(HINSTANCE hinst, DWORD version, REF
 
 #if 0
   // Passthrough
-  static auto real = reinterpret_cast<decltype(&DirectInput8Create)>(GetDirectInputProc("DirectInput8Create"));
+  static auto real = reinterpret_cast<decltype(&DirectInput8Create)>(GetDirectInput8Proc("DirectInput8Create"));
   return real(hinst, version, desired_interface, out_interface, unknown);
 #else
   IUnknown* result;
@@ -57,22 +52,22 @@ extern "C" HRESULT WINAPI DirectInput8Create(HINSTANCE hinst, DWORD version, REF
 }
 
 extern "C" HRESULT WINAPI DllCanUnloadNow() {
-  static auto real = reinterpret_cast<decltype(&DllCanUnloadNow)>(GetDirectInputProc("DllCanUnloadNow"));
+  static auto real = reinterpret_cast<decltype(&DllCanUnloadNow)>(dhc::GetDirectInput8Proc("DllCanUnloadNow"));
   return real();
 }
 
 extern "C" HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void** ppv) {
-  static auto real = reinterpret_cast<decltype(&DllGetClassObject)>(GetDirectInputProc("DllGetClassObject"));
+  static auto real = reinterpret_cast<decltype(&DllGetClassObject)>(dhc::GetDirectInput8Proc("DllGetClassObject"));
   return real(rclsid, riid, ppv);
 }
 
 extern "C" HRESULT WINAPI DllRegisterServer() {
-  static auto real = reinterpret_cast<decltype(&DllRegisterServer)>(GetDirectInputProc("DllRegisterServer"));
+  static auto real = reinterpret_cast<decltype(&DllRegisterServer)>(dhc::GetDirectInput8Proc("DllRegisterServer"));
   return real();
 }
 
 extern "C" HRESULT WINAPI DllUnregisterServer() {
-  static auto real = reinterpret_cast<decltype(&DllUnregisterServer)>(GetDirectInputProc("DllUnregisterServer"));
+  static auto real = reinterpret_cast<decltype(&DllUnregisterServer)>(dhc::GetDirectInput8Proc("DllUnregisterServer"));
   return real();
 }
 
