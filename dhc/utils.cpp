@@ -40,6 +40,16 @@ std::string to_string(const std::wstring& wstr) {
   return converter.to_bytes(wstr);
 }
 
+std::wstring to_wstring(const std::string& str) {
+  using convert_type = std::codecvt_utf8<wchar_t>;
+  std::wstring_convert<convert_type, wchar_t> converter;
+  return converter.from_bytes(str);
+}
+
+std::wstring to_wstring(const std::wstring& wstr) {
+  return wstr;
+}
+
 HMODULE LoadSystemLibrary(const std::wstring& name) {
   std::wstring loaded_module_path;
   std::wstring path = GetSystemDirectory() + L"\\" + name;

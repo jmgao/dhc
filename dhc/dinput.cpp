@@ -95,6 +95,37 @@ class EmulatedDirectInput8 : public InterfaceType {
   virtual HRESULT STDMETHODCALLTYPE EnumDevices(DWORD dev_type, EnumDevicesCallback callback, void* callback_arg,
                                                 DWORD flags) override final {
     LOG(DEBUG) << "DirectInput8::EnumDevices";
+    bool enum_keyboard = dev_type == DI8DEVCLASS_KEYBOARD;
+    bool enum_mouse = dev_type == DI8DEVCLASS_POINTER;
+    bool enum_sticks = dev_type == DI8DEVCLASS_GAMECTRL;
+
+    if (dev_type == DI8DEVCLASS_ALL) {
+      enum_keyboard = enum_mouse = enum_sticks = true;
+    }
+
+    if (enum_keyboard) {
+      DeviceInstanceType dev = {};
+      dev.dwSize = sizeof(dev);
+      dev.guidInstance = GUID_SysKeyboard;
+      dev.guidProduct = GUID_SysKeyboard;
+      dev.dwDevType = DI8DEVTYPE_KEYBOARD | DI8DEVTYPEKEYBOARD_PCENH;  // TODO: Actually probe the real keyboard type?
+      tstrncpy(dev.tszInstanceName, "Keyboard", MAX_PATH);
+      tstrncpy(dev.tszProductName, "Keyboard", MAX_PATH);
+      callback(&dev, callback_arg);
+    }
+
+    if (enum_mouse) {
+      DeviceInstanceType dev = {};
+      dev.dwSize = sizeof(dev);
+      dev.guidInstance = GUID_SysMouse;
+      dev.guidProduct = GUID_SysMouse;
+      dev.dwDevType = DI8DEVTYPE_MOUSE | DI8DEVTYPEMOUSE_TRADITIONAL;  // TODO: Actually probe the real mouse type?
+      tstrncpy(dev.tszInstanceName, "Mouse", MAX_PATH);
+      tstrncpy(dev.tszProductName, "Mouse", MAX_PATH);
+      callback(&dev, callback_arg);
+    }
+
+    // TODO: Present our fake devices, once they exist.
     return DI_OK;
   }
 

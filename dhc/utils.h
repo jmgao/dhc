@@ -1,13 +1,34 @@
 #pragma once
 
+#include <string.h>
+#include <wchar.h>
+
 #include "dhc.h"
 
 namespace dhc {
 
 DHC_API HMODULE LoadSystemLibrary(const std::wstring& name);
 
+// Unicode helpers.
 DHC_API std::string to_string(const std::string& str);
 DHC_API std::string to_string(const std::wstring& wstr);
+
+DHC_API std::wstring to_wstring(const std::string& str);
+DHC_API std::wstring to_wstring(const std::wstring& wstr);
+
+template<typename CharType>
+static CharType* tstrncpy(CharType* dst, char* src, size_t len);
+
+template<>
+wchar_t* tstrncpy(wchar_t* dst, char* src, size_t len) {
+  std::wstring wstr = to_wstring(src);
+  return wcsncpy(dst, wstr.data(), len);
+}
+
+template<>
+char* tstrncpy(char* dst, char* src, size_t len) {
+  return strncpy(dst, src, len);
+}
 
 // Windows junk.
 // See https://blogs.msdn.microsoft.com/oldnewthing/20041025-00/?p=37483
