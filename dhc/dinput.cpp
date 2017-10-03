@@ -1,8 +1,9 @@
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 #define INITGUID
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
 #include <atomic>
 

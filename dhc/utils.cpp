@@ -1,9 +1,9 @@
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 #include <codecvt>
 #include <locale>
 #include <string>
-
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
 
 #include "dhc.h"
 #include "logging.h"

@@ -1,5 +1,5 @@
 #define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include <windows.h>
 
 // Hopefully, Microsoft maintained ABI compatibility between versions...
 #include <Xinput.h>
