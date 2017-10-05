@@ -87,6 +87,7 @@ class EmulatedDirectInput8 : public DI8Interface<CharType> {
     }
 
     LOG(DEBUG) << "DirectInput8::CreateDevice(" << to_string(refguid) << ") = DIERR_DEVICENOTREG";
+    *device = nullptr;
     return DIERR_DEVICENOTREG;
   }
 
