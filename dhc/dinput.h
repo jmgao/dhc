@@ -20,8 +20,11 @@ struct DI8Types<char> {
   using InterfaceType = IDirectInput8A;
   using DeviceInterfaceType = IDirectInputDevice8A;
   using DeviceInstanceType = DIDEVICEINSTANCEA;
+  using DeviceObjectInstanceType = DIDEVICEOBJECTINSTANCEA;
   using ActionFormatType = DIACTIONFORMATA;
   using ConfigureDevicesParamsType = DICONFIGUREDEVICESPARAMSA;
+  using EffectInfoType = DIEFFECTINFOA;
+  using DeviceImageInfoHeaderType = DIDEVICEIMAGEINFOHEADERA;
 };
 
 template <>
@@ -30,8 +33,11 @@ struct DI8Types<wchar_t> {
   using InterfaceType = IDirectInput8W;
   using DeviceInterfaceType = IDirectInputDevice8W;
   using DeviceInstanceType = DIDEVICEINSTANCEW;
+  using DeviceObjectInstanceType = DIDEVICEOBJECTINSTANCEW;
   using ActionFormatType = DIACTIONFORMATW;
   using ConfigureDevicesParamsType = DICONFIGUREDEVICESPARAMSW;
+  using EffectInfoType = DIEFFECTINFOW;
+  using DeviceImageInfoHeaderType = DIDEVICEIMAGEINFOHEADERW;
 };
 
 template <typename CharType>
@@ -44,9 +50,18 @@ template <typename CharType>
 using DI8DeviceInstance = typename DI8Types<CharType>::DeviceInstanceType;
 
 template <typename CharType>
+using DI8DeviceObjectInstance = typename DI8Types<CharType>::DeviceObjectInstanceType;
+
+template <typename CharType>
 using DI8ActionFormat = typename DI8Types<CharType>::ActionFormatType;
 
 template <typename CharType>
 using DI8ConfigureDevicesParams = typename DI8Types<CharType>::ConfigureDevicesParamsType;
+
+template <typename CharType>
+using DI8EffectInfo = typename DI8Types<CharType>::EffectInfoType;
+
+template <typename CharType>
+using DI8DeviceImageInfoHeader = typename DI8Types<CharType>::DeviceImageInfoHeaderType;
 
 }  // namespace dhc
