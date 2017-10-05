@@ -49,11 +49,10 @@ com_ptr<IDirectInput8A> GetRealDirectInput8A() {
   return com_ptr<IDirectInput8A>(static_cast<IDirectInput8A*>(iface));
 }
 
-template <typename CharType, typename InterfaceType, typename DeviceInterfaceType, typename DeviceInstanceType,
-          typename ActionFormatType, typename ConfigureParamsType>
-class EmulatedDirectInput8 : public InterfaceType {
+template <typename CharType>
+class EmulatedDirectInput8 : public DI8Interface<CharType> {
  public:
-  explicit EmulatedDirectInput8(com_ptr<InterfaceType> real) : real_(std::move(real)) {}
+  explicit EmulatedDirectInput8(com_ptr<DI8Interface<CharType>> real) : real_(std::move(real)) {}
   virtual ~EmulatedDirectInput8() = default;
 
   COM_OBJECT_BASE();
@@ -64,7 +63,7 @@ class EmulatedDirectInput8 : public InterfaceType {
     }
 
     const IID* expected;
-    if (std::is_same_v<InterfaceType, IDirectInput8W>) {
+    if (std::is_same_v<CharType, wchar_t>) {
       expected = &IID_IDirectInput8W;
     } else {
       expected = &IID_IDirectInput8A;
@@ -80,7 +79,7 @@ class EmulatedDirectInput8 : public InterfaceType {
     return NOERROR;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE CreateDevice(REFGUID refguid, DeviceInterfaceType** device,
+  virtual HRESULT STDMETHODCALLTYPE CreateDevice(REFGUID refguid, DI8DeviceInterface<CharType>** device,
                                                  IUnknown* unknown) override final {
     if (refguid == GUID_SysKeyboard || refguid == GUID_SysMouse) {
       LOG(DEBUG) << "DirectInput8::CreateDevice(" << to_string(refguid) << ") = passthrough";
@@ -91,7 +90,7 @@ class EmulatedDirectInput8 : public InterfaceType {
     return DIERR_DEVICENOTREG;
   }
 
-  using EnumDevicesCallback = BOOL(FAR PASCAL*)(const DeviceInstanceType*, void*);
+  using EnumDevicesCallback = BOOL(FAR PASCAL*)(const DI8DeviceInstance<CharType>*, void*);
   virtual HRESULT STDMETHODCALLTYPE EnumDevices(DWORD dev_type, EnumDevicesCallback callback, void* callback_arg,
                                                 DWORD flags) override final {
     LOG(DEBUG) << "DirectInput8::EnumDevices";
@@ -104,7 +103,7 @@ class EmulatedDirectInput8 : public InterfaceType {
     }
 
     if (enum_keyboard) {
-      DeviceInstanceType dev = {};
+      DI8DeviceInstance<CharType> dev = {};
       dev.dwSize = sizeof(dev);
       dev.guidInstance = GUID_SysKeyboard;
       dev.guidProduct = GUID_SysKeyboard;
@@ -115,7 +114,7 @@ class EmulatedDirectInput8 : public InterfaceType {
     }
 
     if (enum_mouse) {
-      DeviceInstanceType dev = {};
+      DI8DeviceInstance<CharType> dev = {};
       dev.dwSize = sizeof(dev);
       dev.guidInstance = GUID_SysMouse;
       dev.guidProduct = GUID_SysMouse;
@@ -149,17 +148,19 @@ class EmulatedDirectInput8 : public InterfaceType {
     return DIERR_DEVICENOTREG;
   }
 
-  using EnumDevicesBySemanticsCallback = BOOL(FAR PASCAL*)(const DeviceInstanceType*, DeviceInterfaceType*, DWORD,
-                                                           DWORD, void*);
-  virtual HRESULT STDMETHODCALLTYPE EnumDevicesBySemantics(const CharType* username, ActionFormatType* action_format,
+  using EnumDevicesBySemanticsCallback = BOOL(FAR PASCAL*)(const DI8DeviceInstance<CharType>*,
+                                                           DI8DeviceInterface<CharType>*, DWORD, DWORD, void*);
+  virtual HRESULT STDMETHODCALLTYPE EnumDevicesBySemantics(const CharType* username,
+                                                           DI8ActionFormat<CharType>* action_format,
                                                            EnumDevicesBySemanticsCallback callback, void* callback_arg,
                                                            DWORD flags) override final {
     LOG(DEBUG) << "DirectInput8::EnumDevicesBySemantics";
     return DI_OK;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE ConfigureDevices(LPDICONFIGUREDEVICESCALLBACK callback, ConfigureParamsType* params,
-                                                     DWORD flags, void* callback_data) override final {
+  virtual HRESULT STDMETHODCALLTYPE ConfigureDevices(LPDICONFIGUREDEVICESCALLBACK callback,
+                                                     DI8ConfigureDevicesParams<CharType>* params, DWORD flags,
+                                                     void* callback_data) override final {
     LOG(DEBUG) << "DirectInput8::ConfigureDevices";
     return DI_OK;
   }
@@ -168,10 +169,8 @@ class EmulatedDirectInput8 : public InterfaceType {
   unique_com_ptr<InterfaceType> real_;
 };
 
-using EmulatedDirectInput8W = EmulatedDirectInput8<wchar_t, IDirectInput8W, IDirectInputDevice8W, DIDEVICEINSTANCEW,
-                                                   DIACTIONFORMATW, DICONFIGUREDEVICESPARAMSW>;
-using EmulatedDirectInput8A = EmulatedDirectInput8<char, IDirectInput8A, IDirectInputDevice8A, DIDEVICEINSTANCEA,
-                                                   DIACTIONFORMATA, DICONFIGUREDEVICESPARAMSA>;
+using EmulatedDirectInput8W = EmulatedDirectInput8<wchar_t>;
+using EmulatedDirectInput8A = EmulatedDirectInput8<char>;
 
 IDirectInput8W* GetEmulatedDirectInput8W() {
   static auto instance = new EmulatedDirectInput8W(GetRealDirectInput8W());
