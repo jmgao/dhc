@@ -35,25 +35,25 @@ static HRESULT RealDirectInput8Create(HINSTANCE hinst, DWORD version, REFIID des
   return real(hinst, version, desired_interface, out_interface, unknown);
 }
 
-unique_com_ptr<IDirectInput8W> GetRealDirectInput8W() {
+com_ptr<IDirectInput8W> GetRealDirectInput8W() {
   void* iface;
   HRESULT rc = RealDirectInput8Create(HINST_SELF, 0x0800, IID_IDirectInput8W, &iface, nullptr);
   CHECK_EQ(DI_OK, rc);
-  return unique_com_ptr<IDirectInput8W>(static_cast<IDirectInput8W*>(iface));
+  return com_ptr<IDirectInput8W>(static_cast<IDirectInput8W*>(iface));
 }
 
-unique_com_ptr<IDirectInput8A> GetRealDirectInput8A() {
+com_ptr<IDirectInput8A> GetRealDirectInput8A() {
   void* iface;
   HRESULT rc = RealDirectInput8Create(HINST_SELF, 0x0800, IID_IDirectInput8A, &iface, nullptr);
   CHECK_EQ(DI_OK, rc);
-  return unique_com_ptr<IDirectInput8A>(static_cast<IDirectInput8A*>(iface));
+  return com_ptr<IDirectInput8A>(static_cast<IDirectInput8A*>(iface));
 }
 
 template <typename CharType, typename InterfaceType, typename DeviceInterfaceType, typename DeviceInstanceType,
           typename ActionFormatType, typename ConfigureParamsType>
 class EmulatedDirectInput8 : public InterfaceType {
  public:
-  explicit EmulatedDirectInput8(unique_com_ptr<InterfaceType> real) : real_(std::move(real)) {}
+  explicit EmulatedDirectInput8(com_ptr<InterfaceType> real) : real_(std::move(real)) {}
   virtual ~EmulatedDirectInput8() = default;
 
   COM_OBJECT_BASE();

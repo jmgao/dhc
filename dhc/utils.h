@@ -48,26 +48,30 @@ extern "C" IMAGE_DOS_HEADER __ImageBase;
   std::atomic<ULONG> ref_count_ = 1
 
 template <typename T>
-struct unique_com_ptr {
-  unique_com_ptr() {}
-  explicit unique_com_ptr(T* ptr) {
+struct com_ptr {
+  com_ptr() {}
+  explicit com_ptr(T* ptr) {
     ptr_ = ptr;
-    ptr_->AddRef();
   }
 
-  ~unique_com_ptr() {
+  ~com_ptr() {
     reset();
   }
 
-  unique_com_ptr(const unique_com_ptr& copy) = delete;
-  unique_com_ptr(unique_com_ptr&& move) {
+  com_ptr(const com_ptr& copy) = delete;
+  com_ptr(com_ptr&& move) {
     reset(move.release());
   }
 
-  unique_com_ptr& operator=(const unique_com_ptr& copy) = delete;
-  unique_com_ptr& operator=(unique_com_ptr&& move) {
+  com_ptr& operator=(const com_ptr& copy) = delete;
+  com_ptr& operator=(com_ptr&& move) {
     reset(move.release());
     return *this;
+  }
+
+  com_ptr clone() {
+    ptr_->AddRef();
+    return com_ptr(ptr_);
   }
 
   T* release() {
