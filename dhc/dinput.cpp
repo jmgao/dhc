@@ -229,151 +229,151 @@ class EmulatedDirectInputDevice8 : public DI8DeviceInterface<CharType> {
     return NOERROR;
   }
 
-  HRESULT GetCapabilities(DIDEVCAPS*) override final {
+  virtual HRESULT STDMETHODCALLTYPE GetCapabilities(DIDEVCAPS*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
   using EnumObjectsCallback = BOOL(PASCAL*)(const DI8DeviceObjectInstance<CharType>*, void*);
-  HRESULT EnumObjects(EnumObjectsCallback, void*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE EnumObjects(EnumObjectsCallback, void*, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT GetProperty(REFGUID, DIPROPHEADER*) override final {
+  virtual HRESULT STDMETHODCALLTYPE GetProperty(REFGUID, DIPROPHEADER*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT SetProperty(REFGUID, const DIPROPHEADER*) override final {
+  virtual HRESULT STDMETHODCALLTYPE SetProperty(REFGUID, const DIPROPHEADER*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT Acquire() override final {
+  virtual HRESULT STDMETHODCALLTYPE Acquire() override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT Unacquire() override final {
+  virtual HRESULT STDMETHODCALLTYPE Unacquire() override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT GetDeviceState(DWORD, void*) override final {
+  virtual HRESULT STDMETHODCALLTYPE GetDeviceState(DWORD, void*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT GetDeviceData(DWORD, DIDEVICEOBJECTDATA*, DWORD*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE GetDeviceData(DWORD, DIDEVICEOBJECTDATA*, DWORD*, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT SetDataFormat(const DIDATAFORMAT*) override final {
+  virtual HRESULT STDMETHODCALLTYPE SetDataFormat(const DIDATAFORMAT*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT SetEventNotification(HANDLE) override final {
+  virtual HRESULT STDMETHODCALLTYPE SetEventNotification(HANDLE) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT SetCooperativeLevel(HWND, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE SetCooperativeLevel(HWND, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT GetObjectInfo(DI8DeviceObjectInstance<CharType>*, DWORD, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE GetObjectInfo(DI8DeviceObjectInstance<CharType>*, DWORD, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT GetDeviceInfo(DI8DeviceInstance<CharType>*) override final {
+  virtual HRESULT STDMETHODCALLTYPE GetDeviceInfo(DI8DeviceInstance<CharType>*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT RunControlPanel(HWND, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE RunControlPanel(HWND, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT Initialize(HINSTANCE, DWORD, REFGUID) override final {
+  virtual HRESULT STDMETHODCALLTYPE Initialize(HINSTANCE, DWORD, REFGUID) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT CreateEffect(REFGUID, const DIEFFECT*, IDirectInputEffect**, IUnknown*) override final {
+  virtual HRESULT STDMETHODCALLTYPE CreateEffect(REFGUID, const DIEFFECT*, IDirectInputEffect**, IUnknown*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
   using EnumEffectsCallback = BOOL(PASCAL*)(const DI8EffectInfo<CharType>*, void*);
-  HRESULT EnumEffects(EnumEffectsCallback, void*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE EnumEffects(EnumEffectsCallback, void*, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT GetEffectInfo(DI8EffectInfo<CharType>*, REFGUID) override final {
+  virtual HRESULT STDMETHODCALLTYPE GetEffectInfo(DI8EffectInfo<CharType>*, REFGUID) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT GetForceFeedbackState(DWORD*) override final {
+  virtual HRESULT STDMETHODCALLTYPE GetForceFeedbackState(DWORD*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT SendForceFeedbackCommand(DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE SendForceFeedbackCommand(DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
   using EnumCreatedEffectObjectsCallback = BOOL(PASCAL*)(IDirectInputEffect*, void*);
-  HRESULT EnumCreatedEffectObjects(EnumCreatedEffectObjectsCallback, void*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE EnumCreatedEffectObjects(EnumCreatedEffectObjectsCallback, void*, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT Escape(DIEFFESCAPE*) override final {
+  virtual HRESULT STDMETHODCALLTYPE Escape(DIEFFESCAPE*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT Poll() override final {
+  virtual HRESULT STDMETHODCALLTYPE Poll() override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT SendDeviceData(DWORD, const DIDEVICEOBJECTDATA*, DWORD*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE SendDeviceData(DWORD, const DIDEVICEOBJECTDATA*, DWORD*, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
   using EnumEffectsInFileCallback = BOOL(PASCAL*)(const DIFILEEFFECT*, void*);
-  HRESULT EnumEffectsInFile(const CharType*, EnumEffectsInFileCallback, void*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE EnumEffectsInFile(const CharType*, EnumEffectsInFileCallback, void*, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT WriteEffectToFile(const CharType*, DWORD, DIFILEEFFECT*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE WriteEffectToFile(const CharType*, DWORD, DIFILEEFFECT*, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT BuildActionMap(DI8ActionFormat<CharType>*, const CharType*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE BuildActionMap(DI8ActionFormat<CharType>*, const CharType*, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT SetActionMap(DI8ActionFormat<CharType>*, const CharType*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE SetActionMap(DI8ActionFormat<CharType>*, const CharType*, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  HRESULT GetImageInfo(DI8DeviceImageInfoHeader<CharType>*) override final {
+  virtual HRESULT STDMETHODCALLTYPE GetImageInfo(DI8DeviceImageInfoHeader<CharType>*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
