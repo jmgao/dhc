@@ -91,7 +91,7 @@ class EmulatedDirectInput8 : public DI8Interface<CharType> {
     return DIERR_DEVICENOTREG;
   }
 
-  using EnumDevicesCallback = BOOL(FAR PASCAL*)(const DI8DeviceInstance<CharType>*, void*);
+  using EnumDevicesCallback = BOOL(PASCAL*)(const DI8DeviceInstance<CharType>*, void*);
   virtual HRESULT STDMETHODCALLTYPE EnumDevices(DWORD dev_type, EnumDevicesCallback callback, void* callback_arg,
                                                 DWORD flags) override final {
     LOG(DEBUG) << "DirectInput8::EnumDevices";
@@ -149,8 +149,8 @@ class EmulatedDirectInput8 : public DI8Interface<CharType> {
     return DIERR_DEVICENOTREG;
   }
 
-  using EnumDevicesBySemanticsCallback = BOOL(FAR PASCAL*)(const DI8DeviceInstance<CharType>*,
-                                                           DI8DeviceInterface<CharType>*, DWORD, DWORD, void*);
+  using EnumDevicesBySemanticsCallback = BOOL(PASCAL*)(const DI8DeviceInstance<CharType>*,
+                                                       DI8DeviceInterface<CharType>*, DWORD, DWORD, void*);
   virtual HRESULT STDMETHODCALLTYPE EnumDevicesBySemantics(const CharType* username,
                                                            DI8ActionFormat<CharType>* action_format,
                                                            EnumDevicesBySemanticsCallback callback, void* callback_arg,
@@ -159,7 +159,8 @@ class EmulatedDirectInput8 : public DI8Interface<CharType> {
     return DI_OK;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE ConfigureDevices(LPDICONFIGUREDEVICESCALLBACK callback,
+  using ConfigureDevicesCallback = BOOL(PASCAL*)(IUnknown*, LPVOID);
+  virtual HRESULT STDMETHODCALLTYPE ConfigureDevices(ConfigureDevicesCallback callback,
                                                      DI8ConfigureDevicesParams<CharType>* params, DWORD flags,
                                                      void* callback_data) override final {
     LOG(DEBUG) << "DirectInput8::ConfigureDevices";
