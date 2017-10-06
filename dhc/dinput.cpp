@@ -124,10 +124,12 @@ class EmulatedDirectInput8 : public DI8Interface<CharType> {
       dev.dwSize = sizeof(dev);
       dev.guidInstance = GUID_SysKeyboard;
       dev.guidProduct = GUID_SysKeyboard;
-      dev.dwDevType = DI8DEVTYPE_KEYBOARD | DI8DEVTYPEKEYBOARD_PCENH;  // TODO: Actually probe the real keyboard type?
+      dev.dwDevType = DI8DEVTYPE_KEYBOARD | (DI8DEVTYPEKEYBOARD_PCENH << 8);  // TODO: Actually probe the real keyboard type?
       tstrncpy(dev.tszInstanceName, "Keyboard", MAX_PATH);
       tstrncpy(dev.tszProductName, "Keyboard", MAX_PATH);
-      callback(&dev, callback_arg);
+      if (callback(&dev, callback_arg) == DIENUM_STOP) {
+        return DI_OK;
+      }
     }
 
     if (enum_mouse) {
@@ -135,10 +137,12 @@ class EmulatedDirectInput8 : public DI8Interface<CharType> {
       dev.dwSize = sizeof(dev);
       dev.guidInstance = GUID_SysMouse;
       dev.guidProduct = GUID_SysMouse;
-      dev.dwDevType = DI8DEVTYPE_MOUSE | DI8DEVTYPEMOUSE_TRADITIONAL;  // TODO: Actually probe the real mouse type?
+      dev.dwDevType = DI8DEVTYPE_MOUSE | (DI8DEVTYPEMOUSE_TRADITIONAL << 8);  // TODO: Actually probe the real mouse type?
       tstrncpy(dev.tszInstanceName, "Mouse", MAX_PATH);
       tstrncpy(dev.tszProductName, "Mouse", MAX_PATH);
-      callback(&dev, callback_arg);
+      if (callback(&dev, callback_arg) == DIENUM_STOP) {
+        return DI_OK;
+      }
     }
 
     if (enum_sticks) {
@@ -147,14 +151,18 @@ class EmulatedDirectInput8 : public DI8Interface<CharType> {
         dev.dwSize = sizeof(dev);
         dev.guidInstance = guid;
         dev.guidProduct = guid;
-        dev.dwDevType = DI8DEVTYPE_GAMEPAD | DI8DEVTYPEGAMEPAD_STANDARD;
+        dev.dwDevType = DI8DEVTYPE_GAMEPAD | (DI8DEVTYPEGAMEPAD_STANDARD << 8);
         char player = guid.Data4[7];
         const char* name = (player == 1) ? "DHC P1" : "DHC P2";
         tstrncpy(dev.tszInstanceName, name, MAX_PATH);
         tstrncpy(dev.tszProductName, name, MAX_PATH);
-        callback(&dev, callback_arg);
+
+        if (callback(&dev, callback_arg) == DIENUM_STOP) {
+          return DI_OK;
+        }
       }
     }
+
     return DI_OK;
   }
 
