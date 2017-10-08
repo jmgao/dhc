@@ -2,7 +2,7 @@
 #include <windows.h>
 
 // Hopefully, Microsoft maintained ABI compatibility between versions...
-#include <Xinput.h>
+#include <xinput.h>
 
 #include "logging.h"
 #include "utils.h"

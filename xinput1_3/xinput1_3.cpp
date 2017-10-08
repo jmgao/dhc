@@ -2,11 +2,13 @@
 #include <windows.h>
 
 // Hopefully, Microsoft maintained ABI compatibility between versions...
-#include <Xinput.h>
+#include <xinput.h>
 
 #include "dhc/dhc.h"
 #include "dhc/logging.h"
 #include "dhc/xinput.h"
+
+extern "C" {
 
 BOOL WINAPI DllMain(HMODULE module, DWORD reason, void*) {
   switch (reason) {
@@ -65,3 +67,5 @@ void WINAPI Unknown102() {
 void WINAPI Unknown103() {
   UNIMPLEMENTED(FATAL);
 }
+
+}  //  extern "C"
