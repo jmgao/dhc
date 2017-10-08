@@ -16,6 +16,7 @@ add_project_arguments(
 
 dhc = shared_library(
   'dhc',
+  name_prefix: '',
   sources: [
     'dhc/dhc.cpp',
     'dhc/dinput.cpp',
@@ -28,6 +29,7 @@ dhc = shared_library(
 
 dinput8 = shared_library(
   'dinput8',
+  name_prefix: '',
   link_with: [dhc],
   sources: ['dinput8/dinput8.cpp'],
   vs_module_defs: 'dinput8/dinput8.def',
@@ -35,6 +37,7 @@ dinput8 = shared_library(
 
 xinput1_3 = shared_library(
   'xinput1_3',
+  name_prefix: '',
   link_with: [dhc],
   sources: ['xinput1_3/xinput1_3.cpp'],
   vs_module_defs: 'xinput1_3/xinput1_3.def',
