@@ -1,4 +1,12 @@
-project('dhc', 'cpp', default_options: ['cpp_std=c++1z'])
+project(
+  'dhc',
+  'cpp',
+  default_options: [
+    'cpp_std=c++1z',
+    'strip=true',
+    'buildtype=minsize',
+  ],
+)
 
 add_project_arguments(
   '-Wall',
@@ -24,7 +32,10 @@ dhc = shared_library(
     'dhc/utils.cpp',
     'dhc/xinput.cpp',
   ],
-  cpp_args: '-DDHC_EXPORTS'
+  cpp_args: '-DDHC_EXPORTS',
+
+  install: true,
+  install_dir: join_paths(meson.current_build_dir(), 'dist'),
 )
 
 dinput8 = shared_library(
@@ -33,6 +44,9 @@ dinput8 = shared_library(
   link_with: [dhc],
   sources: ['dinput8/dinput8.cpp'],
   vs_module_defs: 'dinput8/dinput8.def',
+
+  install: true,
+  install_dir: join_paths(meson.current_build_dir(), 'dist'),
 )
 
 xinput1_3 = shared_library(
@@ -41,4 +55,7 @@ xinput1_3 = shared_library(
   link_with: [dhc],
   sources: ['xinput1_3/xinput1_3.cpp'],
   vs_module_defs: 'xinput1_3/xinput1_3.def',
+
+  install: true,
+  install_dir: join_paths(meson.current_build_dir(), 'dist'),
 )
