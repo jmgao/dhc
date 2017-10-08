@@ -87,6 +87,14 @@ struct com_ptr {
     ptr_ = new_ptr;
   }
 
+  T* get() {
+    return ptr_;
+  }
+
+  const T* get() const {
+    return ptr_;
+  }
+
   T* operator->() {
     return ptr_;
   }
