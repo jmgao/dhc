@@ -21,6 +21,8 @@
 #include "logging.h"
 
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 #include <iostream>
@@ -34,10 +36,70 @@
 #include <sys/types.h>
 
 namespace dhc {
+
+// The prebuilt version of mingw we use doesn't support mutex or recursive_mutex.
+// Therefore, implement our own using the Windows primitives.
+class recursive_mutex {
+ public:
+  recursive_mutex() { InitializeCriticalSection(&mutex_); }
+  ~recursive_mutex() { DeleteCriticalSection(&mutex_); }
+
+  recursive_mutex(const recursive_mutex& copy) = delete;
+  recursive_mutex(recursive_mutex&& move) = delete;
+
+  void lock() { EnterCriticalSection(&mutex_); }
+  bool try_lock() { return TryEnterCriticalSection(&mutex_); }
+  void unlock() { LeaveCriticalSection(&mutex_); }
+
+ private:
+  CRITICAL_SECTION mutex_;
+};
+
+class mutex {
+ public:
+  mutex() {}
+  ~mutex() = default;
+
+  mutex(const mutex& copy) = delete;
+  mutex(mutex&& move) = delete;
+
+  void lock() {
+    mutex_.lock();
+    if (++lock_count_ != 1) {
+      fprintf(stderr, "non-recursive mutex locked reentrantly\n");
+      abort();
+    }
+  }
+
+  void unlock() {
+    if (--lock_count_ != 0) {
+      fprintf(stderr, "non-recursive mutex unlock resulted in unexpected lock count: %zu\n", lock_count_);
+      abort();
+    }
+    mutex_.unlock();
+  }
+
+  bool try_lock() {
+    if (!mutex_.try_lock()) {
+      return false;
+    }
+    if (lock_count_ != 0) {
+      mutex_.unlock();
+      return false;
+    }
+    ++lock_count_;
+    return true;
+  }
+
+ private:
+  recursive_mutex mutex_;
+  size_t lock_count_ = 0;
+};
+
 namespace logging {
 
-static std::mutex& LoggingLock() {
-  static auto& logging_lock = *new std::mutex();
+static dhc::mutex& LoggingLock() {
+  static auto& logging_lock = *new dhc::mutex();
   return logging_lock;
 }
 
@@ -129,12 +191,12 @@ void InitLogging(char* argv[], LogFunction&& logger, AbortFunction&& aborter) {
 }
 
 void SetLogger(LogFunction&& logger) {
-  std::lock_guard<std::mutex> lock(LoggingLock());
+  std::lock_guard<dhc::mutex> lock(LoggingLock());
   Logger() = std::move(logger);
 }
 
 void SetAborter(AbortFunction&& aborter) {
-  std::lock_guard<std::mutex> lock(LoggingLock());
+  std::lock_guard<dhc::mutex> lock(LoggingLock());
   Aborter() = std::move(aborter);
 }
 
@@ -226,7 +288,7 @@ LogMessage::~LogMessage() {
 
   {
     // Do the actual logging with the lock held.
-    std::lock_guard<std::mutex> lock(LoggingLock());
+    std::lock_guard<dhc::mutex> lock(LoggingLock());
     if (msg.find('\n') == std::string::npos) {
       LogLine(data_->GetFile(), data_->GetLineNumber(), data_->GetId(),
               data_->GetSeverity(), msg.c_str());
