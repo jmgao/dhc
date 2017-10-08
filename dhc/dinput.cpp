@@ -57,7 +57,7 @@ template <typename CharType>
 class EmulatedDirectInputDevice8;
 
 template <typename CharType>
-class EmulatedDirectInput8 : public DI8Interface<CharType> {
+class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
  public:
   explicit EmulatedDirectInput8(com_ptr<DI8Interface<CharType>> real)
       : real_(std::move(real)),
@@ -65,15 +65,13 @@ class EmulatedDirectInput8 : public DI8Interface<CharType> {
         p2_(new EmulatedDirectInputDevice8<CharType>()) {}
   virtual ~EmulatedDirectInput8() = default;
 
-  COM_OBJECT_BASE();
-
   virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** obj) override final {
     if (!obj) {
       return E_INVALIDARG;
     }
 
     const IID* expected;
-    if (std::is_same_v<CharType, wchar_t>) {
+    if (std::is_same<CharType, wchar_t>::value) {
       expected = &IID_IDirectInput8W;
     } else {
       expected = &IID_IDirectInput8A;
@@ -85,7 +83,7 @@ class EmulatedDirectInput8 : public DI8Interface<CharType> {
     }
 
     *obj = this;
-    AddRef();
+    this->AddRef();
     return NOERROR;
   }
 
@@ -211,17 +209,15 @@ class EmulatedDirectInput8 : public DI8Interface<CharType> {
 };
 
 template <typename CharType>
-class EmulatedDirectInputDevice8 : public DI8DeviceInterface<CharType> {
+class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>> {
  public:
-  COM_OBJECT_BASE();
-
   virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** obj) override final {
     if (!obj) {
       return E_INVALIDARG;
     }
 
     const IID* expected;
-    if (std::is_same_v<CharType, wchar_t>) {
+    if (std::is_same<CharType, wchar_t>::value) {
       expected = &IID_IDirectInputDevice8W;
     } else {
       expected = &IID_IDirectInputDevice8A;
@@ -233,7 +229,7 @@ class EmulatedDirectInputDevice8 : public DI8DeviceInterface<CharType> {
     }
 
     *obj = this;
-    AddRef();
+    this->AddRef();
     return NOERROR;
   }
 

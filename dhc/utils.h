@@ -3,6 +3,8 @@
 #include <string.h>
 #include <wchar.h>
 
+#include <atomic>
+
 #include "dhc.h"
 
 namespace dhc {
@@ -36,16 +38,23 @@ extern "C" IMAGE_DOS_HEADER __ImageBase;
 #define HINST_SELF ((HINSTANCE)&__ImageBase)
 
 // COM junk.
-#define COM_OBJECT_BASE()                                                          \
-  virtual ULONG STDMETHODCALLTYPE AddRef() override final { return ++ref_count_; } \
-  virtual ULONG STDMETHODCALLTYPE Release() override final {                       \
-    ULONG rc = --ref_count_;                                                       \
-    if (rc == 0) {                                                                 \
-      delete this;                                                                 \
-    }                                                                              \
-    return rc;                                                                     \
-  }                                                                                \
-  std::atomic<ULONG> ref_count_ = 1
+template <typename T>
+struct com_base : public T {
+  com_base() : ref_count_(1) {}
+  virtual ~com_base() = default;
+
+  virtual ULONG STDMETHODCALLTYPE AddRef() override final { return ++ref_count_; }
+  virtual ULONG STDMETHODCALLTYPE Release() override final {
+    ULONG rc = --ref_count_;
+    if (rc == 0) {
+      delete this;
+    }
+    return rc;
+  }
+
+ private:
+  std::atomic<ULONG> ref_count_;
+};
 
 template <typename T>
 struct com_ptr {
