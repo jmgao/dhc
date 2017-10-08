@@ -237,9 +237,23 @@ class EmulatedDirectInputDevice8 : public DI8DeviceInterface<CharType> {
     return NOERROR;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE GetCapabilities(DIDEVCAPS*) override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+  virtual HRESULT STDMETHODCALLTYPE GetCapabilities(DIDEVCAPS* caps) override final {
+    LOG(VERBOSE) << "EmulatedDirectInputDevice8::GetCapabilities";
+    caps->dwFlags = DIDC_ATTACHED | DIDC_EMULATED;
+    caps->dwDevType = DI8DEVTYPE_GAMEPAD | (DI8DEVTYPEGAMEPAD_STANDARD << 8) | 0x10000 /* ??? */;
+
+    // Pretend to be a PS4 controller.
+    caps->dwAxes = 6;
+    caps->dwButtons = 14;
+    caps->dwPOVs = 1;
+
+    caps->dwFFSamplePeriod = 0;
+    caps->dwFFMinTimeResolution = 0;
+
+    caps->dwFirmwareRevision = 0;
+    caps->dwHardwareRevision = 0;
+    caps->dwFFDriverVersion = 0;
+    return DI_OK;
   }
 
   using EnumObjectsCallback = BOOL(PASCAL*)(const DI8DeviceObjectInstance<CharType>*, void*);
