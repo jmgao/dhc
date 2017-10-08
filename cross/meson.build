@@ -1,5 +1,19 @@
 project('dhc', 'cpp', default_options: ['cpp_std=c++1z'])
 
+add_project_arguments(
+  '-Wall',
+  '-Wextra',
+  '-Werror',
+
+  # Ignore some annoying useless warnings.
+  '-Wno-unused-parameter',
+
+  # Unfortunately, COM interfaces don't have virtual destructors.
+  '-Wno-non-virtual-dtor',
+
+  language: 'cpp',
+)
+
 dhc = shared_library(
   'dhc',
   sources: [

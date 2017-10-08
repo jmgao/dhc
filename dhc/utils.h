@@ -18,17 +18,12 @@ DHC_API std::string to_string(const std::wstring& wstr);
 DHC_API std::wstring to_wstring(const std::string& str);
 DHC_API std::wstring to_wstring(const std::wstring& wstr);
 
-template <typename CharType>
-static CharType* tstrncpy(CharType* dst, const char* src, size_t len);
-
-template <>
-wchar_t* tstrncpy(wchar_t* dst, const char* src, size_t len) {
+inline wchar_t* tstrncpy(wchar_t* dst, const char* src, size_t len) {
   std::wstring wstr = to_wstring(src);
   return wcsncpy(dst, wstr.data(), len);
 }
 
-template <>
-char* tstrncpy(char* dst, const char* src, size_t len) {
+inline char* tstrncpy(char* dst, const char* src, size_t len) {
   return strncpy(dst, src, len);
 }
 

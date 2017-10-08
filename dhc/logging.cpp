@@ -102,7 +102,7 @@ void DefaultLogger(LogId, LogSeverity severity, const char*, const char* file, u
   char severity_char = log_characters[severity];
   char buf[2048];
   size_t rc = snprintf(buf, sizeof(buf), "%c %s %5d %s:%u] %s\n", severity_char, timestamp,
-                       GetCurrentThreadId(), file, line, message);
+                       static_cast<int>(GetCurrentThreadId()), file, line, message);
   if (console_out) {
     WriteFile(console_out, buf, rc, nullptr, nullptr);
   }
