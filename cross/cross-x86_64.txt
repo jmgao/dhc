@@ -3,7 +3,7 @@ c = 'x86_64-w64-mingw32-gcc-posix'
 cpp = 'x86_64-w64-mingw32-g++-posix'
 ar = 'x86_64-w64-mingw32-ar'
 strip = 'x86_64-w64-mingw32-strip'
-exe_wrapper = 'wine'
+exe_wrapper = 'wine64'
 
 [host_machine]
 system = 'windows'
