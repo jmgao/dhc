@@ -22,6 +22,12 @@ add_project_arguments(
   language: 'cpp',
 )
 
+add_project_link_arguments(
+  '-Wl,--enable-stdcall-fixup',
+
+  language: 'cpp',
+)
+
 dhc = shared_library(
   'dhc',
   name_prefix: '',
