@@ -253,9 +253,71 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
   using EnumObjectsCallback = BOOL(PASCAL*)(const DI8DeviceObjectInstance<CharType>*, void*);
-  virtual HRESULT STDMETHODCALLTYPE EnumObjects(EnumObjectsCallback, void*, DWORD) override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+  virtual HRESULT STDMETHODCALLTYPE EnumObjects(EnumObjectsCallback callback, void* callback_arg,
+                                                DWORD flags) override final {
+    LOG(VERBOSE) << "EmulatedDirectInput8Device::EnumObjects(flags = " << flags << ")";
+    std::vector<DirectInputButtonConf> objects;
+
+    if (LOWORD(flags) >> 8) {
+      // Asked for a non-zero enum collection.
+      LOG(INFO) << "EmulatedDirectInput8Device::EnumObjects called with non-zero requested enum collection "
+                << (LOWORD(flags) >> 8);
+      return DI_OK;
+    }
+
+    if (flags & DIDFT_ABSAXIS) {
+      objects.push_back(kDIAxisLeftX);
+      objects.push_back(kDIAxisLeftY);
+
+      objects.push_back(kDIAxisRightX);
+      objects.push_back(kDIAxisRightY);
+
+      objects.push_back(kDIAxisL2);
+      objects.push_back(kDIAxisR2);
+    }
+    if (flags & DIDFT_POV) {
+      objects.push_back(kDIDPad);
+    }
+    if (flags & DIDFT_PSHBUTTON) {
+      objects.push_back(kDIButtonSquare);
+      objects.push_back(kDIButtonX);
+      objects.push_back(kDIButtonCircle);
+      objects.push_back(kDIButtonTriangle);
+
+      objects.push_back(kDIButtonL1);
+      objects.push_back(kDIButtonR1);
+
+      objects.push_back(kDIButtonL2);
+      objects.push_back(kDIButtonR2);
+
+      objects.push_back(kDIButtonShare);
+      objects.push_back(kDIButtonOptions);
+
+      objects.push_back(kDIButtonL3);
+      objects.push_back(kDIButtonR3);
+
+      objects.push_back(kDIButtonPS);
+      objects.push_back(kDIButtonTrackpad);
+    }
+    if (flags & DIDFT_COLLECTION) {
+      objects.push_back(kDICollectionGamepad);
+    }
+
+    for (const auto& object : objects) {
+      DI8DeviceObjectInstance<CharType> obj = {};
+      obj.dwSize = sizeof(obj);
+      obj.guidType = object.guid;
+      obj.dwOfs = object.offset;
+      obj.dwType = object.type;
+      obj.dwFlags = object.flags;
+      tstrncpy(obj.tszName, object.name, MAX_PATH);
+      // TODO: HID stuff?
+      if (callback(&obj, callback_arg) != DIENUM_CONTINUE) {
+        return DI_OK;
+      }
+    }
+
+    return DI_OK;
   }
 
   virtual HRESULT STDMETHODCALLTYPE GetProperty(REFGUID, DIPROPHEADER*) override final {
@@ -263,7 +325,39 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE SetProperty(REFGUID, const DIPROPHEADER*) override final {
+  virtual HRESULT STDMETHODCALLTYPE SetProperty(REFGUID guid, const DIPROPHEADER* prop_header) override final {
+    std::string property_name;
+
+    // These aren't equivalent to `guid == DIPROP_FOO`, because fuck you, that's why.
+    if (&guid == &DIPROP_APPDATA) {
+      property_name = "DIPROP_APPDATA";
+    } else if (&guid == &DIPROP_AUTOCENTER) {
+      property_name = "DIPROP_AUTOCENTER";
+    } else if (&guid == &DIPROP_AXISMODE) {
+      property_name = "DIPROP_AXISMODE";
+    } else if (&guid == &DIPROP_BUFFERSIZE) {
+      property_name = "DIPROP_BUFFERSIZE";
+    } else if (&guid == &DIPROP_CALIBRATION) {
+      property_name = "DIPROP_CALIBRATION";
+    } else if (&guid == &DIPROP_CALIBRATIONMODE) {
+      property_name = "DIPROP_CALIBRATIONMODE";
+    } else if (&guid == &DIPROP_CPOINTS) {
+      property_name = "DIPROP_CPOINTS";
+    } else if (&guid == &DIPROP_DEADZONE) {
+      property_name = "DIPROP_DEADZONE";
+    } else if (&guid == &DIPROP_FFGAIN) {
+      property_name = "DIPROP_FFGAIN";
+    } else if (&guid == &DIPROP_INSTANCENAME) {
+      property_name = "DIPROP_INSTANCENAME";
+    } else if (&guid == &DIPROP_PRODUCTNAME) {
+      property_name = "DIPROP_PRODUCTNAME";
+    } else if (&guid == &DIPROP_RANGE) {
+      property_name = "DIPROP_RANGE";
+    } else if (&guid == &DIPROP_SATURATION) {
+      property_name = "DIPROP_SATURATION";
+    }
+
+    LOG(VERBOSE) << "EmulatedDirectInput8Device::SetProperty(" << property_name << ")";
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
@@ -288,9 +382,29 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE SetDataFormat(const DIDATAFORMAT*) override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+  virtual HRESULT STDMETHODCALLTYPE SetDataFormat(const DIDATAFORMAT* format) override final {
+    LOG(VERBOSE) << "EmulatedDirectInput8Device::SetDataFormat";
+
+    if (sizeof(DIDATAFORMAT) != format->dwSize) {
+      LOG(ERROR) << "EmulatedDirectInput8Device::SetDataFormat: received invalid dwSize " << format->dwSize
+                 << " (expected " << sizeof(DIDATAFORMAT) << ")";
+      return DIERR_INVALIDPARAM;
+    }
+
+    if (sizeof(DIOBJECTDATAFORMAT) != format->dwObjSize) {
+      LOG(ERROR) << "EmulatedDirectInput8Device::SetDataFormat: received invalid dwObjSize " << format->dwObjSize
+                 << " (expected " << sizeof(DIOBJECTDATAFORMAT) << ")";
+      return DIERR_INVALIDPARAM;
+    }
+
+    if (format->dwNumObjs <= 0) {
+      LOG(ERROR) << "EmulatedDirectInput8Device::SetDataFormat: received invalid dwNumObjs " << format->dwNumObjs;
+      return DIERR_INVALIDPARAM;
+    }
+
+    // TODO: Validate the object data format?
+    object_data_format_.assign(format->rgodf, format->rgodf + format->dwNumObjs);
+    return DI_OK;
   }
 
   virtual HRESULT STDMETHODCALLTYPE SetEventNotification(HANDLE) override final {
@@ -298,9 +412,30 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE SetCooperativeLevel(HWND, DWORD) override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+  virtual HRESULT STDMETHODCALLTYPE SetCooperativeLevel(HWND, DWORD flags) override final {
+    std::vector<std::string> stringified_flags;
+    if (flags != 0) {
+      if (flags & DISCL_BACKGROUND) {
+        stringified_flags.push_back("DISCL_BACKGROUND");
+      }
+      if (flags & DISCL_EXCLUSIVE) {
+        stringified_flags.push_back("DISCL_EXCLUSIVE");
+      }
+      if (flags & DISCL_FOREGROUND) {
+        stringified_flags.push_back("DISCL_FOREGROUND");
+      }
+      if (flags & DISCL_NONEXCLUSIVE) {
+        stringified_flags.push_back("DISCL_NONEXCLUSIVE");
+      }
+      if (flags & DISCL_NOWINKEY) {
+        stringified_flags.push_back("DISCL_NOWINKEY");
+      }
+    }
+
+    LOG(VERBOSE) << "EmulatedDirectInput8Device::SetCooperativeLevel("
+                 << ((flags == 0) ? "0" : Join(stringified_flags, " | ")) << ")";
+
+    return DI_OK;
   }
 
   virtual HRESULT STDMETHODCALLTYPE GetObjectInfo(DI8DeviceObjectInstance<CharType>*, DWORD, DWORD) override final {
@@ -395,6 +530,9 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
+
+ private:
+  std::vector<DIOBJECTDATAFORMAT> object_data_format_;
 };
 
 using EmulatedDirectInput8W = EmulatedDirectInput8<wchar_t>;

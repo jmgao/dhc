@@ -11,6 +11,20 @@ namespace dhc {
 
 DHC_API HMODULE LoadSystemLibrary(const std::wstring& name);
 
+// String helpers.
+template <typename Iterable>
+std::string Join(Iterable&& iterable, const std::string& glue = ", ") {
+  std::string result;
+  for (const auto& item : iterable) {
+    result += item;
+    result += glue;
+  }
+  if (!result.empty()) {
+    result.resize(result.size() - glue.size());
+  }
+  return result;
+}
+
 // Unicode helpers.
 DHC_API std::string to_string(const std::string& str);
 DHC_API std::string to_string(const std::wstring& wstr);
