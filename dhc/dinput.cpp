@@ -512,8 +512,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
   virtual HRESULT STDMETHODCALLTYPE Poll() override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+    LOG(VERBOSE) << "EmulatedDirectInput8Device::Poll()";
+    return DI_NOEFFECT;
   }
 
   virtual HRESULT STDMETHODCALLTYPE SendDeviceData(DWORD, const DIDEVICEOBJECTDATA*, DWORD*,
