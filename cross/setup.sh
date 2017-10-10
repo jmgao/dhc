@@ -2,6 +2,9 @@
 
 set -ex
 
+unset CC
+unset CXX
+
 [ -e build.32 ] && rm -r build.32
 [ -e build.64 ] && rm -r build.64
 

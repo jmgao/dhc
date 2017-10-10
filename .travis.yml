@@ -6,13 +6,8 @@ services:
   - docker
 
 before_install:
-  - docker pull debian:buster
-  - docker run -d -v $(pwd):/dhc debian:buster /bin/bash -c 'while true; do sleep 1; done'
-
-before_script:
-  - docker exec $(docker ps -aq) /bin/bash -c 'dpkg --add-architecture i386 && apt-get -qq update'
-  - docker exec $(docker ps -aq) /bin/bash -c 'apt-get install -y mingw-w64 ninja-build python3-pip wine32 wine64'
-  - docker exec $(docker ps -aq) /bin/bash -c 'pip3 install meson'
+  - docker pull jmgao/debian-buster-mingw-w64
+  - docker run -d -v $(pwd):/dhc jmgao/debian-buster-mingw-w64 /bin/bash -c 'while true; do sleep 1; done'
 
 script:
   - docker exec $(docker ps -aq) /bin/bash -c 'cd /dhc/cross && ./setup.sh'
