@@ -46,6 +46,7 @@ struct PassthroughXInput : public dhc::XInputImplementation {
   }
 
   virtual void Enable(BOOL value) override final {
+    MSVC_SUPPRESS(4995)
     static auto real = reinterpret_cast<decltype(&XInputEnable)>(GetXInputProc("XInputEnable"));
     LOG(VERBOSE) << "XInputEnable(" << value << ")";
     real(value);

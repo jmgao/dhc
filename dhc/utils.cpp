@@ -15,7 +15,8 @@ static std::wstring GetSystemDirectory() {
   std::wstring system_directory(MAX_PATH, L'\0');
 
   while (true) {
-    size_t rc = ::GetSystemDirectoryW(&system_directory[0], system_directory.size());
+    size_t rc = ::GetSystemDirectoryW(&system_directory[0],
+                                      static_cast<unsigned int>(system_directory.size()));
     if (rc == 0) {
       LOG(FATAL) << "failed to get system directory";
     }

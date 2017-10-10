@@ -37,6 +37,7 @@ DWORD WINAPI XInputGetCapabilities(DWORD user_index, DWORD flags,
   return dhc::XInputImplementation::Instance().GetCapabilities(user_index, flags, capabilities);
 }
 
+MSVC_SUPPRESS(4995)
 void WINAPI XInputEnable(BOOL enable) {
   return dhc::XInputImplementation::Instance().Enable(enable);
 }
