@@ -32,7 +32,8 @@ DWORD WINAPI XInputSetState(DWORD user_index, XINPUT_VIBRATION* vibration) {
   return dhc::XInputImplementation::Instance().SetState(user_index, vibration);
 }
 
-DWORD WINAPI XInputGetCapabilities(DWORD user_index, DWORD flags, XINPUT_CAPABILITIES* capabilities) {
+DWORD WINAPI XInputGetCapabilities(DWORD user_index, DWORD flags,
+                                   XINPUT_CAPABILITIES* capabilities) {
   return dhc::XInputImplementation::Instance().GetCapabilities(user_index, flags, capabilities);
 }
 
@@ -40,12 +41,16 @@ void WINAPI XInputEnable(BOOL enable) {
   return dhc::XInputImplementation::Instance().Enable(enable);
 }
 
-DWORD WINAPI XInputGetDSoundAudioDeviceGuids(DWORD user_index, GUID* render_guid, GUID* capture_guid) {
-  return dhc::XInputImplementation::Instance().GetDSoundAudioDeviceGuids(user_index, render_guid, capture_guid);
+DWORD WINAPI XInputGetDSoundAudioDeviceGuids(DWORD user_index, GUID* render_guid,
+                                             GUID* capture_guid) {
+  return dhc::XInputImplementation::Instance().GetDSoundAudioDeviceGuids(user_index, render_guid,
+                                                                         capture_guid);
 }
 
-DWORD WINAPI XInputGetBatteryInformation(DWORD user_index, BYTE dev_type, XINPUT_BATTERY_INFORMATION* battery_information) {
-  return dhc::XInputImplementation::Instance().GetBatteryInformation(user_index, dev_type, battery_information);
+DWORD WINAPI XInputGetBatteryInformation(DWORD user_index, BYTE dev_type,
+                                         XINPUT_BATTERY_INFORMATION* battery_information) {
+  return dhc::XInputImplementation::Instance().GetBatteryInformation(user_index, dev_type,
+                                                                     battery_information);
 }
 
 DWORD WINAPI XInputGetKeystroke(DWORD user_index, DWORD reserved, XINPUT_KEYSTROKE* keystroke) {

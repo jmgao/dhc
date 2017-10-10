@@ -9,7 +9,8 @@
 #include "xinput.h"
 
 // This declaration is hidden when targeting Windows 8 or newer.
-DWORD WINAPI XInputGetDSoundAudioDeviceGuids(DWORD user_index, GUID* render_guid, GUID* capture_guid);
+DWORD WINAPI XInputGetDSoundAudioDeviceGuids(DWORD user_index, GUID* render_guid,
+                                             GUID* capture_guid);
 
 static FARPROC WINAPI GetXInputProc(const char* proc_name) {
   static HMODULE real = dhc::LoadSystemLibrary(L"xinput1_3.dll");
@@ -35,8 +36,10 @@ struct PassthroughXInput : public dhc::XInputImplementation {
     return rc;
   }
 
-  virtual DWORD GetCapabilities(DWORD user_index, DWORD flags, XINPUT_CAPABILITIES* capabilities) override final {
-    static auto real = reinterpret_cast<decltype(&XInputGetCapabilities)>(GetXInputProc("XInputGetCapabilities"));
+  virtual DWORD GetCapabilities(DWORD user_index, DWORD flags,
+                                XINPUT_CAPABILITIES* capabilities) override final {
+    static auto real =
+        reinterpret_cast<decltype(&XInputGetCapabilities)>(GetXInputProc("XInputGetCapabilities"));
     DWORD rc = real(user_index, flags, capabilities);
     LOG(VERBOSE) << "XInputGetCapabilities(" << user_index << ") = " << rc;
     return rc;
@@ -48,20 +51,27 @@ struct PassthroughXInput : public dhc::XInputImplementation {
     real(value);
   }
 
-  virtual DWORD GetDSoundAudioDeviceGuids(DWORD user_index, GUID* render_guid, GUID* capture_guid) override final {
-    static auto real = reinterpret_cast<decltype(&XInputGetDSoundAudioDeviceGuids)>(GetXInputProc("XInputGetDSoundAudioDeviceGuids"));
+  virtual DWORD GetDSoundAudioDeviceGuids(DWORD user_index, GUID* render_guid,
+                                          GUID* capture_guid) override final {
+    static auto real = reinterpret_cast<decltype(&XInputGetDSoundAudioDeviceGuids)>(
+        GetXInputProc("XInputGetDSoundAudioDeviceGuids"));
     LOG(VERBOSE) << "XInputGetDSoundAudioDeviceGuids(" << user_index << ")";
     return real(user_index, render_guid, capture_guid);
   }
 
-  virtual DWORD GetBatteryInformation(DWORD user_index, BYTE dev_type, XINPUT_BATTERY_INFORMATION* battery_information) override final {
-    static auto real = reinterpret_cast<decltype(&XInputGetBatteryInformation)>(GetXInputProc("XInputGetBatteryInformation"));
+  virtual DWORD GetBatteryInformation(
+      DWORD user_index, BYTE dev_type,
+      XINPUT_BATTERY_INFORMATION* battery_information) override final {
+    static auto real = reinterpret_cast<decltype(&XInputGetBatteryInformation)>(
+        GetXInputProc("XInputGetBatteryInformation"));
     LOG(VERBOSE) << "XInputGetBatteryInformation(" << user_index << ")";
     return real(user_index, dev_type, battery_information);
   }
 
-  virtual DWORD GetKeystroke(DWORD user_index, DWORD reserved, XINPUT_KEYSTROKE* keystroke) override final {
-    static auto real = reinterpret_cast<decltype(&XInputGetKeystroke)>(GetXInputProc("XInputGetKeystroke"));
+  virtual DWORD GetKeystroke(DWORD user_index, DWORD reserved,
+                             XINPUT_KEYSTROKE* keystroke) override final {
+    static auto real =
+        reinterpret_cast<decltype(&XInputGetKeystroke)>(GetXInputProc("XInputGetKeystroke"));
     LOG(VERBOSE) << "XInputGetKeystroke(" << user_index << ")";
     return real(user_index, reserved, keystroke);
   }
@@ -81,7 +91,8 @@ struct EmptyXInput : public dhc::XInputImplementation {
     return ERROR_DEVICE_NOT_CONNECTED;
   }
 
-  virtual DWORD GetCapabilities(DWORD user_index, DWORD flags, XINPUT_CAPABILITIES* capabilities) override final {
+  virtual DWORD GetCapabilities(DWORD user_index, DWORD flags,
+                                XINPUT_CAPABILITIES* capabilities) override final {
     return ERROR_DEVICE_NOT_CONNECTED;
   }
 
@@ -90,15 +101,19 @@ struct EmptyXInput : public dhc::XInputImplementation {
     return;
   }
 
-  virtual DWORD GetDSoundAudioDeviceGuids(DWORD user_index, GUID* render_guid, GUID* capture_guid) override final {
+  virtual DWORD GetDSoundAudioDeviceGuids(DWORD user_index, GUID* render_guid,
+                                          GUID* capture_guid) override final {
     return ERROR_DEVICE_NOT_CONNECTED;
   }
 
-  virtual DWORD GetBatteryInformation(DWORD user_index, BYTE dev_type, XINPUT_BATTERY_INFORMATION* battery_information) override final {
+  virtual DWORD GetBatteryInformation(
+      DWORD user_index, BYTE dev_type,
+      XINPUT_BATTERY_INFORMATION* battery_information) override final {
     return ERROR_DEVICE_NOT_CONNECTED;
   }
 
-  virtual DWORD GetKeystroke(DWORD user_index, DWORD reserved, XINPUT_KEYSTROKE* keystroke) override final {
+  virtual DWORD GetKeystroke(DWORD user_index, DWORD reserved,
+                             XINPUT_KEYSTROKE* keystroke) override final {
     return ERROR_DEVICE_NOT_CONNECTED;
   }
 

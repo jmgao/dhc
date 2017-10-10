@@ -34,8 +34,10 @@ FARPROC WINAPI GetDirectInput8Proc(const char* proc_name) {
   return GetProcAddress(real, proc_name);
 }
 
-static HRESULT RealDirectInput8Create(HINSTANCE hinst, DWORD version, REFIID desired_interface, void** out_interface, IUnknown* unknown) {
-  static auto real = reinterpret_cast<decltype(&DirectInput8Create)>(GetDirectInput8Proc("DirectInput8Create"));
+static HRESULT RealDirectInput8Create(HINSTANCE hinst, DWORD version, REFIID desired_interface,
+                                      void** out_interface, IUnknown* unknown) {
+  static auto real =
+      reinterpret_cast<decltype(&DirectInput8Create)>(GetDirectInput8Proc("DirectInput8Create"));
   return real(hinst, version, desired_interface, out_interface, unknown);
 }
 
@@ -87,7 +89,8 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
     return NOERROR;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE CreateDevice(REFGUID refguid, DI8DeviceInterface<CharType>** device,
+  virtual HRESULT STDMETHODCALLTYPE CreateDevice(REFGUID refguid,
+                                                 DI8DeviceInterface<CharType>** device,
                                                  IUnknown* unknown) override final {
     if (refguid == GUID_SysKeyboard || refguid == GUID_SysMouse) {
       LOG(DEBUG) << "DirectInput8::CreateDevice(" << to_string(refguid) << ") = passthrough";
@@ -106,8 +109,8 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
   }
 
   using EnumDevicesCallback = BOOL(PASCAL*)(const DI8DeviceInstance<CharType>*, void*);
-  virtual HRESULT STDMETHODCALLTYPE EnumDevices(DWORD dev_type, EnumDevicesCallback callback, void* callback_arg,
-                                                DWORD flags) override final {
+  virtual HRESULT STDMETHODCALLTYPE EnumDevices(DWORD dev_type, EnumDevicesCallback callback,
+                                                void* callback_arg, DWORD flags) override final {
     LOG(DEBUG) << "DirectInput8::EnumDevices";
     bool enum_keyboard = dev_type == DI8DEVCLASS_KEYBOARD;
     bool enum_mouse = dev_type == DI8DEVCLASS_POINTER;
@@ -122,7 +125,8 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
       dev.dwSize = sizeof(dev);
       dev.guidInstance = GUID_SysKeyboard;
       dev.guidProduct = GUID_SysKeyboard;
-      dev.dwDevType = DI8DEVTYPE_KEYBOARD | (DI8DEVTYPEKEYBOARD_PCENH << 8);  // TODO: Actually probe the real keyboard type?
+      // TODO: Actually probe the real keyboard type?
+      dev.dwDevType = DI8DEVTYPE_KEYBOARD | (DI8DEVTYPEKEYBOARD_PCENH << 8);
       tstrncpy(dev.tszInstanceName, "Keyboard", MAX_PATH);
       tstrncpy(dev.tszProductName, "Keyboard", MAX_PATH);
       if (callback(&dev, callback_arg) == DIENUM_STOP) {
@@ -135,7 +139,8 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
       dev.dwSize = sizeof(dev);
       dev.guidInstance = GUID_SysMouse;
       dev.guidProduct = GUID_SysMouse;
-      dev.dwDevType = DI8DEVTYPE_MOUSE | (DI8DEVTYPEMOUSE_TRADITIONAL << 8);  // TODO: Actually probe the real mouse type?
+      // TODO: Actually probe the real mouse type?
+      dev.dwDevType = DI8DEVTYPE_MOUSE | (DI8DEVTYPEMOUSE_TRADITIONAL << 8);
       tstrncpy(dev.tszInstanceName, "Mouse", MAX_PATH);
       tstrncpy(dev.tszProductName, "Mouse", MAX_PATH);
       if (callback(&dev, callback_arg) == DIENUM_STOP) {
@@ -179,16 +184,19 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
     return DIERR_INVALIDPARAM;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE FindDevice(REFGUID refguid, const CharType* name, GUID* instance) override final {
-    LOG(DEBUG) << "DirectInput8::FindDevice(" << to_string(refguid) << ", " << to_string(name) << ")";
+  virtual HRESULT STDMETHODCALLTYPE FindDevice(REFGUID guid, const CharType* name,
+                                               GUID* instance) override final {
+    LOG(DEBUG) << "DirectInput8::FindDevice(" << to_string(guid) << ", " << to_string(name) << ")";
     return DIERR_DEVICENOTREG;
   }
 
   using EnumDevicesBySemanticsCallback = BOOL(PASCAL*)(const DI8DeviceInstance<CharType>*,
-                                                       DI8DeviceInterface<CharType>*, DWORD, DWORD, void*);
+                                                       DI8DeviceInterface<CharType>*, DWORD, DWORD,
+                                                       void*);
   virtual HRESULT STDMETHODCALLTYPE EnumDevicesBySemantics(const CharType* username,
                                                            DI8ActionFormat<CharType>* action_format,
-                                                           EnumDevicesBySemanticsCallback callback, void* callback_arg,
+                                                           EnumDevicesBySemanticsCallback callback,
+                                                           void* callback_arg,
                                                            DWORD flags) override final {
     LOG(FATAL) << "DirectInput8::EnumDevicesBySemantics unimplemented";
     return DI_OK;
@@ -196,7 +204,8 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
 
   using ConfigureDevicesCallback = BOOL(PASCAL*)(IUnknown*, LPVOID);
   virtual HRESULT STDMETHODCALLTYPE ConfigureDevices(ConfigureDevicesCallback callback,
-                                                     DI8ConfigureDevicesParams<CharType>* params, DWORD flags,
+                                                     DI8ConfigureDevicesParams<CharType>* params,
+                                                     DWORD flags,
                                                      void* callback_data) override final {
     LOG(FATAL) << "DirectInput8::ConfigureDevices unimplemented";
     return DI_OK;
@@ -260,7 +269,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
     if (LOWORD(flags) >> 8) {
       // Asked for a non-zero enum collection.
-      LOG(INFO) << "EmulatedDirectInput8Device::EnumObjects called with non-zero requested enum collection "
+      LOG(INFO) << "EmulatedDirectInput8Device::EnumObjects called with non-zero enum collection "
                 << (LOWORD(flags) >> 8);
       return DI_OK;
     }
@@ -325,7 +334,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE SetProperty(REFGUID guid, const DIPROPHEADER* prop_header) override final {
+  virtual HRESULT STDMETHODCALLTYPE SetProperty(REFGUID guid,
+                                                const DIPROPHEADER* prop_header) override final {
     std::string property_name;
 
     // These aren't equivalent to `guid == DIPROP_FOO`, because fuck you, that's why.
@@ -377,7 +387,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE GetDeviceData(DWORD, DIDEVICEOBJECTDATA*, DWORD*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE GetDeviceData(DWORD, DIDEVICEOBJECTDATA*, DWORD*,
+                                                  DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
@@ -386,19 +397,20 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     LOG(VERBOSE) << "EmulatedDirectInput8Device::SetDataFormat";
 
     if (sizeof(DIDATAFORMAT) != format->dwSize) {
-      LOG(ERROR) << "EmulatedDirectInput8Device::SetDataFormat: received invalid dwSize " << format->dwSize
-                 << " (expected " << sizeof(DIDATAFORMAT) << ")";
+      LOG(ERROR) << "EmulatedDirectInput8Device::SetDataFormat: received invalid dwSize "
+                 << format->dwSize << " (expected " << sizeof(DIDATAFORMAT) << ")";
       return DIERR_INVALIDPARAM;
     }
 
     if (sizeof(DIOBJECTDATAFORMAT) != format->dwObjSize) {
-      LOG(ERROR) << "EmulatedDirectInput8Device::SetDataFormat: received invalid dwObjSize " << format->dwObjSize
-                 << " (expected " << sizeof(DIOBJECTDATAFORMAT) << ")";
+      LOG(ERROR) << "EmulatedDirectInput8Device::SetDataFormat: received invalid dwObjSize "
+                 << format->dwObjSize << " (expected " << sizeof(DIOBJECTDATAFORMAT) << ")";
       return DIERR_INVALIDPARAM;
     }
 
     if (format->dwNumObjs <= 0) {
-      LOG(ERROR) << "EmulatedDirectInput8Device::SetDataFormat: received invalid dwNumObjs " << format->dwNumObjs;
+      LOG(ERROR) << "EmulatedDirectInput8Device::SetDataFormat: received invalid dwNumObjs "
+                 << format->dwNumObjs;
       return DIERR_INVALIDPARAM;
     }
 
@@ -438,7 +450,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DI_OK;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE GetObjectInfo(DI8DeviceObjectInstance<CharType>*, DWORD, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE GetObjectInfo(DI8DeviceObjectInstance<CharType>*, DWORD,
+                                                  DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
@@ -458,7 +471,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE CreateEffect(REFGUID, const DIEFFECT*, IDirectInputEffect**, IUnknown*) override final {
+  virtual HRESULT STDMETHODCALLTYPE CreateEffect(REFGUID, const DIEFFECT*, IDirectInputEffect**,
+                                                 IUnknown*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
@@ -469,7 +483,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE GetEffectInfo(DI8EffectInfo<CharType>*, REFGUID) override final {
+  virtual HRESULT STDMETHODCALLTYPE GetEffectInfo(DI8EffectInfo<CharType>*,
+                                                  REFGUID) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
@@ -485,7 +500,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
   using EnumCreatedEffectObjectsCallback = BOOL(PASCAL*)(IDirectInputEffect*, void*);
-  virtual HRESULT STDMETHODCALLTYPE EnumCreatedEffectObjects(EnumCreatedEffectObjectsCallback, void*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE EnumCreatedEffectObjects(EnumCreatedEffectObjectsCallback,
+                                                             void*, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
@@ -500,33 +516,39 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE SendDeviceData(DWORD, const DIDEVICEOBJECTDATA*, DWORD*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE SendDeviceData(DWORD, const DIDEVICEOBJECTDATA*, DWORD*,
+                                                   DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
   using EnumEffectsInFileCallback = BOOL(PASCAL*)(const DIFILEEFFECT*, void*);
-  virtual HRESULT STDMETHODCALLTYPE EnumEffectsInFile(const CharType*, EnumEffectsInFileCallback, void*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE EnumEffectsInFile(const CharType*, EnumEffectsInFileCallback,
+                                                      void*, DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE WriteEffectToFile(const CharType*, DWORD, DIFILEEFFECT*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE WriteEffectToFile(const CharType*, DWORD, DIFILEEFFECT*,
+                                                      DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE BuildActionMap(DI8ActionFormat<CharType>*, const CharType*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE BuildActionMap(DI8ActionFormat<CharType>*, const CharType*,
+                                                   DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE SetActionMap(DI8ActionFormat<CharType>*, const CharType*, DWORD) override final {
+  virtual HRESULT STDMETHODCALLTYPE SetActionMap(DI8ActionFormat<CharType>*, const CharType*,
+                                                 DWORD) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE GetImageInfo(DI8DeviceImageInfoHeader<CharType>*) override final {
+  virtual HRESULT STDMETHODCALLTYPE
+  GetImageInfo(DI8DeviceImageInfoHeader<CharType>*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }

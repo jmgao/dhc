@@ -73,7 +73,8 @@ class mutex {
 
   void unlock() {
     if (--lock_count_ != 0) {
-      fprintf(stderr, "non-recursive mutex unlock resulted in unexpected lock count: %zu\n", lock_count_);
+      fprintf(stderr, "non-recursive mutex unlock resulted in unexpected lock count: %zu\n",
+              lock_count_);
       abort();
     }
     mutex_.unlock();

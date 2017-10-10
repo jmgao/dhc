@@ -310,7 +310,8 @@ class LogMessageData;
 // of a CHECK. The destructor will abort if the severity is FATAL.
 class LogMessage {
  public:
-  DHC_API LogMessage(const char* file, unsigned int line, LogId id, LogSeverity severity, int error);
+  DHC_API LogMessage(const char* file, unsigned int line, LogId id, LogSeverity severity,
+                     int error);
   DHC_API ~LogMessage();
   // Returns the stream associated with the message, the LogMessage performs
   // output when it goes out of scope.
