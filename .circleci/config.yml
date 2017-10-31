@@ -1,0 +1,36 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: jmgao/debian-buster-mingw-w64
+    steps:
+      - checkout
+      - run:
+          name: Generate build files
+          command: cd cross && ./setup.sh
+
+      - run:
+          name: Build 32-bit
+          command: ninja -C cross/build.32
+      - store_artifacts:
+          path: cross/build.32/dhc.dll
+          destination: bin32/dhc.dll
+      - store_artifacts:
+          path: cross/build.32/dinput8.dll
+          destination: bin32/dinput8.dll
+      - store_artifacts:
+          path: cross/build.32/xinput1_3.dll
+          destination: bin32/xinput1_3.dll
+
+      - run:
+          name: Build 64-bit
+          command: ninja -C cross/build.64
+      - store_artifacts:
+          path: cross/build.64/dhc.dll
+          destination: bin64/dhc.dll
+      - store_artifacts:
+          path: cross/build.64/dinput8.dll
+          destination: bin64/dinput8.dll
+      - store_artifacts:
+          path: cross/build.64/xinput1_3.dll
+          destination: bin64/xinput1_3.dll
