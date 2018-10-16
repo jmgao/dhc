@@ -2,7 +2,7 @@
 
 #include <dinput.h>
 
-#include "dhc.h"
+#include "dhc/dhc.h"
 
 namespace dhc {
 

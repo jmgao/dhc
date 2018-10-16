@@ -5,7 +5,7 @@
 
 #include <atomic>
 
-#include "dhc.h"
+#include "dhc/dhc.h"
 
 namespace dhc {
 

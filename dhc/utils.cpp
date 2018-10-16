@@ -1,13 +1,13 @@
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+
+#include "dhc/utils.h"
 
 #include <codecvt>
 #include <locale>
 #include <string>
 
-#include "dhc.h"
-#include "logging.h"
-#include "utils.h"
+#include "dhc/dhc.h"
+#include "dhc/logging.h"
 
 namespace dhc {
 

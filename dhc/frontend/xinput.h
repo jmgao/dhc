@@ -1,6 +1,8 @@
 #pragma once
 
-#include "dhc.h"
+#include "dhc/dhc.h"
+
+#include <xinput.h>
 
 namespace dhc {
 

@@ -1,12 +1,11 @@
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 // Hopefully, Microsoft maintained ABI compatibility between versions...
 #include <xinput.h>
 
 #include "dhc/dhc.h"
+#include "dhc/frontend/xinput.h"
 #include "dhc/logging.h"
-#include "dhc/xinput.h"
 
 extern "C" {
 
