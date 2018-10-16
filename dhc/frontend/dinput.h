@@ -72,6 +72,7 @@ struct DirectInputButtonConf {
   const char* name;
 };
 
+// clang-format off
 static const DirectInputButtonConf kDIAxisLeftX = {
     DIDOI_ASPECTPOSITION,
     12,
@@ -253,4 +254,6 @@ static const DirectInputButtonConf kDICollectionGamepad = {
     GUID_Unknown,
     "Collection 0 - Game Pad",
 };
+// clang-format on
+
 }  // namespace dhc
