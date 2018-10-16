@@ -24,6 +24,8 @@ add_project_arguments(
 
 add_project_link_arguments(
   '-Wl,--enable-stdcall-fixup',
+  '-static-libgcc',
+  '-static-libstdc++',
 
   language: 'cpp',
 )
