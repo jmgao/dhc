@@ -16,7 +16,7 @@
 * limitations under the License.
 */
 
-#include "dhc.h"
+#include "dhc/dhc.h"
 
 //
 // Google-style C++ logging.

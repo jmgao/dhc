@@ -18,7 +18,7 @@
 #include <windows.h>
 #endif
 
-#include "logging.h"
+#include "dhc/logging.h"
 
 #include <fcntl.h>
 #include <stdio.h>

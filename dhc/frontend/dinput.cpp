@@ -1,15 +1,15 @@
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 #define INITGUID
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 
+#include "dhc/frontend/dinput.h"
+
 #include <atomic>
 
-#include "dinput.h"
-#include "logging.h"
-#include "utils.h"
+#include "dhc/logging.h"
+#include "dhc/utils.h"
 
 using namespace dhc::logging;
 
@@ -149,7 +149,7 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
     }
 
     if (enum_sticks) {
-      for (auto& guid : { GUID_DHC_P1, GUID_DHC_P2}) {
+      for (auto& guid : {GUID_DHC_P1, GUID_DHC_P2}) {
         DI8DeviceInstance<CharType> dev = {};
         dev.dwSize = sizeof(dev);
         dev.guidInstance = guid;

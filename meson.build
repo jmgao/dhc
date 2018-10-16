@@ -19,6 +19,10 @@ add_project_arguments(
   # Unfortunately, COM interfaces don't have virtual destructors.
   '-Wno-non-virtual-dtor',
 
+  # Disable some Windows cruft.
+  '-DWIN32_LEAN_AND_MEAN',
+  '-DNOMINMAX',
+
   language: 'cpp',
 )
 
@@ -35,10 +39,10 @@ dhc = shared_library(
   name_prefix: '',
   sources: [
     'dhc/dhc.cpp',
-    'dhc/dinput.cpp',
+    'dhc/frontend/dinput.cpp',
+    'dhc/frontend/xinput.cpp',
     'dhc/logging.cpp',
     'dhc/utils.cpp',
-    'dhc/xinput.cpp',
   ],
   cpp_args: '-DDHC_EXPORTS',
 

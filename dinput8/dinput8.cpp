@@ -1,4 +1,3 @@
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 #define INITGUID
@@ -6,7 +5,7 @@
 #include <dinput.h>
 
 #include "dhc/dhc.h"
-#include "dhc/dinput.h"
+#include "dhc/frontend/dinput.h"
 #include "dhc/logging.h"
 #include "dhc/utils.h"
 

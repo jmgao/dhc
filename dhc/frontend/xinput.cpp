@@ -1,12 +1,12 @@
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+
+#include "dhc/frontend/xinput.h"
 
 // Hopefully, Microsoft maintained ABI compatibility between versions...
 #include <xinput.h>
 
-#include "logging.h"
-#include "utils.h"
-#include "xinput.h"
+#include "dhc/logging.h"
+#include "dhc/utils.h"
 
 // This declaration is hidden when targeting Windows 8 or newer.
 DWORD WINAPI XInputGetDSoundAudioDeviceGuids(DWORD user_index, GUID* render_guid,
