@@ -112,6 +112,14 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
   virtual HRESULT STDMETHODCALLTYPE EnumDevices(DWORD dev_type, EnumDevicesCallback callback,
                                                 void* callback_arg, DWORD flags) override final {
     LOG(DEBUG) << "DirectInput8::EnumDevices";
+
+    // Assumed behavior.
+    flags &= ~DIEDFL_ATTACHEDONLY;
+
+    if (flags != 0) {
+      LOG(FATAL) << "DirectInput8::EnumDevices received unhandled flags " << flags;
+    }
+
     bool enum_keyboard = dev_type == DI8DEVCLASS_KEYBOARD;
     bool enum_mouse = dev_type == DI8DEVCLASS_POINTER;
     bool enum_sticks = dev_type == DI8DEVCLASS_GAMECTRL;
