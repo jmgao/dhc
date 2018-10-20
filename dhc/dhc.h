@@ -20,7 +20,7 @@
 
 namespace dhc {
 
-static constexpr GUID GUID_DHC_P1 = {
+constexpr GUID GUID_DHC_P1 = {
   0xdead571c,
   0x4efc,
   0x9fa7,
@@ -30,7 +30,7 @@ static constexpr GUID GUID_DHC_P1 = {
   }
 };
 
-static constexpr GUID GUID_DHC_P2 = {
+constexpr GUID GUID_DHC_P2 = {
   0xdead571c,
   0x4efc,
   0x9fa7,
