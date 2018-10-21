@@ -29,32 +29,6 @@ static std::string to_string(REFGUID guid) {
   }
 }
 
-FARPROC WINAPI GetDirectInput8Proc(const char* proc_name) {
-  static HMODULE real = dhc::LoadSystemLibrary(L"dinput8.dll");
-  return GetProcAddress(real, proc_name);
-}
-
-static HRESULT RealDirectInput8Create(HINSTANCE hinst, DWORD version, REFIID desired_interface,
-                                      void** out_interface, IUnknown* unknown) {
-  static auto real =
-      reinterpret_cast<decltype(&DirectInput8Create)>(GetDirectInput8Proc("DirectInput8Create"));
-  return real(hinst, version, desired_interface, out_interface, unknown);
-}
-
-com_ptr<IDirectInput8W> GetRealDirectInput8W() {
-  void* iface;
-  HRESULT rc = RealDirectInput8Create(HINST_SELF, 0x0800, IID_IDirectInput8W, &iface, nullptr);
-  CHECK_EQ(DI_OK, rc);
-  return com_ptr<IDirectInput8W>(static_cast<IDirectInput8W*>(iface));
-}
-
-com_ptr<IDirectInput8A> GetRealDirectInput8A() {
-  void* iface;
-  HRESULT rc = RealDirectInput8Create(HINST_SELF, 0x0800, IID_IDirectInput8A, &iface, nullptr);
-  CHECK_EQ(DI_OK, rc);
-  return com_ptr<IDirectInput8A>(static_cast<IDirectInput8A*>(iface));
-}
-
 template <typename CharType>
 class EmulatedDirectInputDevice8;
 
