@@ -63,4 +63,76 @@ struct EnumMap {
   std::array<ValueType, static_cast<size_t>(Count)> data_;
 };
 
+template<typename T>
+struct SCOPED_CAPABILITY lock_guard {
+  lock_guard(T& mutex) ACQUIRE(mutex) : mutex_(mutex) {
+    mutex_.lock();
+  }
+
+  ~lock_guard() RELEASE() {
+    mutex_.unlock();
+  }
+
+ private:
+  T& mutex_;
+};
+
+template<bool Recursive>
+struct CAPABILITY("mutex") mutex_base {
+  mutex_base() {
+    InitializeCriticalSection(&critical_section_);
+  }
+
+  ~mutex_base() {
+    DeleteCriticalSection(&critical_section_);
+  }
+
+  mutex_base(const mutex_base& copy) = delete;
+  mutex_base(mutex_base&& move) = delete;
+
+  void lock() ACQUIRE() {
+    EnterCriticalSection(&critical_section_);
+    if constexpr (!Recursive) {
+      if (locked) {
+        LOG(FATAL) << "attempted to recursively try_lock an already-locked mutex";
+      }
+      locked = true;
+    }
+  }
+
+  bool try_lock() TRY_ACQUIRE(true) {
+    if (TryEnterCriticalSection(&critical_section_)) {
+      if constexpr (!Recursive) {
+        if (locked) {
+          LOG(FATAL) << "attempted to recursively try_lock an already-locked mutex";
+        }
+        locked = true;
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  void unlock() RELEASE() {
+    if constexpr (!Recursive) {
+      CHECK(locked);
+      locked = false;
+    }
+
+    LeaveCriticalSection(&critical_section_);
+  }
+
+  CRITICAL_SECTION critical_section_;
+  bool locked = false;
+};
+
+struct mutex : public mutex_base<false> {};
+
+class SCOPED_CAPABILITY ScopedAssumeLocked {
+  public:
+    ScopedAssumeLocked(mutex& mutex) ACQUIRE(mutex) {}
+    ~ScopedAssumeLocked() RELEASE() {}
+};
+
 }  // namespace dhc
