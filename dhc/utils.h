@@ -1,5 +1,7 @@
 #pragma once
 
+#include <dinput.h>
+
 #include <string.h>
 #include <wchar.h>
 
@@ -10,6 +12,7 @@
 namespace dhc {
 
 DHC_API HMODULE LoadSystemLibrary(const std::wstring& name);
+DHC_API FARPROC WINAPI GetDirectInput8Proc(const char* proc_name);
 
 // String helpers.
 template <typename Iterable>
@@ -137,5 +140,7 @@ struct com_ptr {
   T* ptr_ = nullptr;
 };
 
+DHC_API com_ptr<IDirectInput8A> GetRealDirectInput8A();
+DHC_API com_ptr<IDirectInput8W> GetRealDirectInput8W();
 
 }  // namespace dhc
