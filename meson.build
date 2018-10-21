@@ -39,12 +39,14 @@ dhc = shared_library(
   name_prefix: '',
   sources: [
     'dhc/dhc.cpp',
+    'dhc/backend/dinput.cpp',
     'dhc/frontend/dinput.cpp',
     'dhc/frontend/xinput.cpp',
     'dhc/logging.cpp',
     'dhc/utils.cpp',
   ],
   cpp_args: '-DDHC_EXPORTS',
+  link_args: '-ldinput8',
 
   install: true,
   install_dir: join_paths(meson.current_build_dir(), 'dist'),
@@ -67,6 +69,15 @@ xinput1_3 = shared_library(
   link_with: [dhc],
   sources: ['xinput1_3/xinput1_3.cpp'],
   vs_module_defs: 'xinput1_3/xinput1_3.def',
+
+  install: true,
+  install_dir: join_paths(meson.current_build_dir(), 'dist'),
+)
+
+input_test = executable(
+  'input_test',
+  link_with: [dhc],
+  sources: ['input_test/input_test.cpp'],
 
   install: true,
   install_dir: join_paths(meson.current_build_dir(), 'dist'),
