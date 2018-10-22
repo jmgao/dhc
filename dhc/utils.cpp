@@ -51,6 +51,25 @@ std::wstring to_wstring(const std::wstring& wstr) {
   return wstr;
 }
 
+std::string_view dierr_to_string(HRESULT result) {
+  switch (result) {
+    case DI_OK:
+      return "DI_OK";
+    case DIERR_INPUTLOST:
+      return "DIERR_INPUTLOST";
+    case DIERR_INVALIDPARAM:
+      return "DIERR_INVALIDPARAM";
+    case DIERR_NOTACQUIRED:
+      return "DIERR_NOTACQUIRED";
+    case DIERR_NOTINITIALIZED:
+      return "DIERR_NOTINITIALIZED";
+    case E_PENDING:
+      return "E_PENDING";
+    default:
+      return "<unknown>";
+  }
+}
+
 HMODULE LoadSystemLibrary(const std::wstring& name) {
   std::wstring loaded_module_path;
   std::wstring path = GetSystemDirectory() + L"\\" + name;
