@@ -21,6 +21,7 @@ flags = [
     '-Wno-long-long',
     '-Wno-variadic-macros',
     '-Wthread-safety',
+    '-Wthread-safety-negative',
 ]
 
 def FlagsForFile(filename):

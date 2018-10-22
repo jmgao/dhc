@@ -123,6 +123,9 @@ struct CAPABILITY("mutex") mutex_base {
     LeaveCriticalSection(&critical_section_);
   }
 
+  // Provide an overload for operator! to support negative thread-safety annotations.
+  const mutex_base& operator!() const;
+
   CRITICAL_SECTION critical_section_;
   bool locked = false;
 };
