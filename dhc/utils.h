@@ -6,6 +6,8 @@
 #include <wchar.h>
 
 #include <atomic>
+#include <string>
+#include <string_view>
 
 #include "dhc/dhc.h"
 
@@ -48,6 +50,8 @@ inline char* tstrncpy(char* dst, const char* src, size_t len) {
 // See https://blogs.msdn.microsoft.com/oldnewthing/20041025-00/?p=37483
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 #define HINST_SELF ((HINSTANCE)&__ImageBase)
+
+DHC_API std::string_view dierr_to_string(HRESULT result);
 
 // COM junk.
 template <typename T>
