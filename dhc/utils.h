@@ -105,6 +105,11 @@ struct com_ptr {
     return temp;
   }
 
+  T** receive() {
+    reset();
+    return &ptr_;
+  }
+
   void reset(T* new_ptr = nullptr) {
     if (ptr_) {
       ptr_->Release();
