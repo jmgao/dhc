@@ -7,8 +7,9 @@
 #include "dhc/frontend/dinput.h"
 
 #include <atomic>
+#include <type_traits>
+#include <variant>
 
-#include "dhc/frontend/ps4.h"
 #include "dhc/logging.h"
 #include "dhc/utils.h"
 
@@ -33,13 +34,18 @@ static std::string to_string(REFGUID guid) {
 template <typename CharType>
 class EmulatedDirectInputDevice8;
 
+// TODO: If a process uses both ASCII and Unicode interfaces, should they share state?
 template <typename CharType>
 class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
  public:
   explicit EmulatedDirectInput8(com_ptr<DI8Interface<CharType>> real)
-      : real_(std::move(real)),
-        p1_(new EmulatedDirectInputDevice8<CharType>()),
-        p2_(new EmulatedDirectInputDevice8<CharType>()) {}
+      : real_(std::move(real)) {
+    auto ctx = Context::GetInstance();
+
+    p1_.reset(new EmulatedDirectInputDevice8<CharType>(ctx->GetDevice(0)));
+    p2_.reset(new EmulatedDirectInputDevice8<CharType>(ctx->GetDevice(1)));
+  }
+
   virtual ~EmulatedDirectInput8() = default;
 
   virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** obj) override final {
@@ -153,7 +159,7 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
   }
 
   virtual HRESULT STDMETHODCALLTYPE GetDeviceStatus(REFGUID refguid) override final {
-    LOG(DEBUG) << "DirectInput8::GetDeviceStatus(" << to_string(refguid) << ")";
+    LOG(FATAL) << "DirectInput8::GetDeviceStatus(" << to_string(refguid) << ")";
     return DI_NOTATTACHED;
   }
 
@@ -169,7 +175,7 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
 
   virtual HRESULT STDMETHODCALLTYPE FindDevice(REFGUID guid, const CharType* name,
                                                GUID* instance) override final {
-    LOG(DEBUG) << "DirectInput8::FindDevice(" << to_string(guid) << ", " << to_string(name) << ")";
+    LOG(FATAL) << "DirectInput8::FindDevice(" << to_string(guid) << ", " << to_string(name) << ")";
     return DIERR_DEVICENOTREG;
   }
 
@@ -203,6 +209,11 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
 template <typename CharType>
 class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>> {
  public:
+  explicit EmulatedDirectInputDevice8(observer_ptr<Device> virtual_device)
+      : vdev_(virtual_device) {
+    objects_ = GeneratePS4EmulatedDeviceObjects();
+  }
+
   virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** obj) override final {
     if (!obj) {
       return E_INVALIDARG;
@@ -248,7 +259,6 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   virtual HRESULT STDMETHODCALLTYPE EnumObjects(EnumObjectsCallback callback, void* callback_arg,
                                                 DWORD flags) override final {
     LOG(VERBOSE) << "EmulatedDirectInput8Device::EnumObjects(flags = " << flags << ")";
-    std::vector<DirectInputButtonConf> objects;
 
     if (LOWORD(flags) >> 8) {
       // Asked for a non-zero enum collection.
@@ -257,45 +267,11 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
       return DI_OK;
     }
 
-    if (flags & DIDFT_ABSAXIS) {
-      objects.push_back(kDIAxisLeftX);
-      objects.push_back(kDIAxisLeftY);
+    for (const auto& object : objects_) {
+      if (!object.MatchesFlags(flags)) {
+        continue;
+      }
 
-      objects.push_back(kDIAxisRightX);
-      objects.push_back(kDIAxisRightY);
-
-      objects.push_back(kDIAxisL2);
-      objects.push_back(kDIAxisR2);
-    }
-    if (flags & DIDFT_POV) {
-      objects.push_back(kDIDPad);
-    }
-    if (flags & DIDFT_PSHBUTTON) {
-      objects.push_back(kDIButtonSquare);
-      objects.push_back(kDIButtonCross);
-      objects.push_back(kDIButtonCircle);
-      objects.push_back(kDIButtonTriangle);
-
-      objects.push_back(kDIButtonL1);
-      objects.push_back(kDIButtonR1);
-
-      objects.push_back(kDIButtonL2);
-      objects.push_back(kDIButtonR2);
-
-      objects.push_back(kDIButtonShare);
-      objects.push_back(kDIButtonOptions);
-
-      objects.push_back(kDIButtonL3);
-      objects.push_back(kDIButtonR3);
-
-      objects.push_back(kDIButtonPS);
-      objects.push_back(kDIButtonTrackpad);
-    }
-    if (flags & DIDFT_COLLECTION) {
-      objects.push_back(kDICollectionGamepad);
-    }
-
-    for (const auto& object : objects) {
       DI8DeviceObjectInstance<CharType> obj = {};
       obj.dwSize = sizeof(obj);
       obj.guidType = object.guid;
@@ -312,45 +288,123 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DI_OK;
   }
 
+  std::string_view GetDIPropName(REFGUID guid) {
+    if (&guid == &DIPROP_APPDATA) {
+      return "DIPROP_APPDATA";
+    } else if (&guid == &DIPROP_AUTOCENTER) {
+      return "DIPROP_AUTOCENTER";
+    } else if (&guid == &DIPROP_AXISMODE) {
+      return "DIPROP_AXISMODE";
+    } else if (&guid == &DIPROP_BUFFERSIZE) {
+      return "DIPROP_BUFFERSIZE";
+    } else if (&guid == &DIPROP_CALIBRATION) {
+      return "DIPROP_CALIBRATION";
+    } else if (&guid == &DIPROP_CALIBRATIONMODE) {
+      return "DIPROP_CALIBRATIONMODE";
+    } else if (&guid == &DIPROP_CPOINTS) {
+      return "DIPROP_CPOINTS";
+    } else if (&guid == &DIPROP_DEADZONE) {
+      return "DIPROP_DEADZONE";
+    } else if (&guid == &DIPROP_FFGAIN) {
+      return "DIPROP_FFGAIN";
+    } else if (&guid == &DIPROP_INSTANCENAME) {
+      return "DIPROP_INSTANCENAME";
+    } else if (&guid == &DIPROP_PRODUCTNAME) {
+      return "DIPROP_PRODUCTNAME";
+    } else if (&guid == &DIPROP_RANGE) {
+      return "DIPROP_RANGE";
+    } else if (&guid == &DIPROP_SATURATION) {
+      return "DIPROP_SATURATION";
+    }
+    return "<unknown>";
+  }
+
   virtual HRESULT STDMETHODCALLTYPE GetProperty(REFGUID, DIPROPHEADER*) override final {
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE SetProperty(REFGUID guid,
-                                                const DIPROPHEADER* prop_header) override final {
-    std::string property_name;
+  bool FindPropertyObject(observer_ptr<EmulatedDeviceObject>* out_object,
+                          const DIPROPHEADER* prop_header) {
+    switch (prop_header->dwHow) {
+      case DIPH_DEVICE:
+        return true;
 
-    // These aren't equivalent to `guid == DIPROP_FOO`, because fuck you, that's why.
-    if (&guid == &DIPROP_APPDATA) {
-      property_name = "DIPROP_APPDATA";
-    } else if (&guid == &DIPROP_AUTOCENTER) {
-      property_name = "DIPROP_AUTOCENTER";
-    } else if (&guid == &DIPROP_AXISMODE) {
-      property_name = "DIPROP_AXISMODE";
-    } else if (&guid == &DIPROP_BUFFERSIZE) {
-      property_name = "DIPROP_BUFFERSIZE";
-    } else if (&guid == &DIPROP_CALIBRATION) {
-      property_name = "DIPROP_CALIBRATION";
-    } else if (&guid == &DIPROP_CALIBRATIONMODE) {
-      property_name = "DIPROP_CALIBRATIONMODE";
-    } else if (&guid == &DIPROP_CPOINTS) {
-      property_name = "DIPROP_CPOINTS";
-    } else if (&guid == &DIPROP_DEADZONE) {
-      property_name = "DIPROP_DEADZONE";
-    } else if (&guid == &DIPROP_FFGAIN) {
-      property_name = "DIPROP_FFGAIN";
-    } else if (&guid == &DIPROP_INSTANCENAME) {
-      property_name = "DIPROP_INSTANCENAME";
-    } else if (&guid == &DIPROP_PRODUCTNAME) {
-      property_name = "DIPROP_PRODUCTNAME";
-    } else if (&guid == &DIPROP_RANGE) {
-      property_name = "DIPROP_RANGE";
-    } else if (&guid == &DIPROP_SATURATION) {
-      property_name = "DIPROP_SATURATION";
+      case DIPH_BYOFFSET:
+        for (const auto& format : device_format_) {
+          if (format.offset == prop_header->dwObj) {
+            *out_object = format.object;
+            return true;
+          }
+        }
+        return false;
+
+      case DIPH_BYUSAGE:
+        LOG(WARNING) << "DIPH_BYUSAGE unimplemented";
+        return false;
+
+      case DIPH_BYID:
+        for (auto& object : objects_) {
+          if (object.Identifier() == prop_header->dwObj) {
+            *out_object = observer_ptr<EmulatedDeviceObject>(&object);
+            return true;
+          }
+        }
+        return false;
+
+      default:
+        LOG(FATAL) << "invalid DIPROPHEADER::dwHow: " << prop_header->dwHow;
     }
 
-    LOG(VERBOSE) << "EmulatedDirectInput8Device::SetProperty(" << property_name << ")";
+    __builtin_unreachable();
+  }
+
+  virtual HRESULT STDMETHODCALLTYPE SetProperty(REFGUID guid,
+                                                const DIPROPHEADER* prop_header) override final {
+    LOG(INFO) << "EmulatedDirectInput8Device::SetProperty(" << GetDIPropName(guid) << ")";
+
+    if (prop_header->dwHeaderSize != sizeof(DIPROPHEADER)) {
+      LOG(ERROR) << "SetProperty got invalid header size: " << prop_header->dwHeaderSize;
+      return DIERR_INVALIDPARAM;
+    }
+
+    // Find the object that's referenced.
+    observer_ptr<EmulatedDeviceObject> object;
+    if (!FindPropertyObject(&object, prop_header)) {
+      LOG(ERROR) << "SetProperty failed to find object";
+      return DIERR_OBJECTNOTFOUND;
+    }
+
+    // These aren't equivalent to `guid == DIPROP_FOO`, because fuck you, that's why.
+    if (&guid == &DIPROP_DEADZONE || &guid == &DIPROP_SATURATION) {
+      if (!object) return DIERR_INVALIDPARAM;
+      if (prop_header->dwSize != sizeof(DIPROPDWORD)) return DIERR_INVALIDPARAM;
+      if (!(object->type & DIDFT_AXIS)) return DIERR_INVALIDPARAM;
+      DWORD value = reinterpret_cast<const DIPROPDWORD*>(prop_header)->dwData;
+      if (value < 0 || value > 10000) {
+          // TODO: Does the reference implementation return an error here?
+          return DIERR_INVALIDPARAM;
+      }
+      if (&guid == &DIPROP_DEADZONE) {
+        LOG(INFO) << "Setting dead zone for axis " << object->name << " to " << value;
+        object->deadzone = value;
+      } else if (&guid == &DIPROP_SATURATION) {
+        LOG(INFO) << "Setting saturation for axis " << object->name << " to " << value;
+        object->saturation = value;
+      }
+      return DI_OK;
+    } else if (&guid == &DIPROP_RANGE) {
+      if (!object) return DIERR_INVALIDPARAM;
+      if (!(object->type & DIDFT_AXIS)) return DIERR_INVALIDPARAM;
+      if (prop_header->dwSize != sizeof(DIPROPRANGE)) return DIERR_INVALIDPARAM;
+      const DIPROPRANGE* range = reinterpret_cast<const DIPROPRANGE*>(prop_header);
+      // TODO: Should we check that max > min?
+      LOG(INFO) << "Setting range for axis " << object->name << " to [" << range->lMin << ", "
+                << range->lMax << "]";
+      std::tie(object->range_min, object->range_max) = std::tie(range->lMin, range->lMax);
+      return DI_OK;
+    }
+
     UNIMPLEMENTED(FATAL);
     return DIERR_NOTINITIALIZED;
   }
@@ -365,9 +419,12 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE GetDeviceState(DWORD, void*) override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+  virtual HRESULT STDMETHODCALLTYPE GetDeviceState(DWORD size, void* buffer) override final {
+    LOG(VERBOSE) << "EmulatedDirectInput8Device::GetDeviceState";
+    for (const auto& fmt : device_format_) {
+      fmt.Apply(static_cast<char*>(buffer), size, vdev_);
+    }
+    return DI_OK;
   }
 
   virtual HRESULT STDMETHODCALLTYPE GetDeviceData(DWORD, DIDEVICEOBJECTDATA*, DWORD*,
@@ -376,29 +433,47 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE SetDataFormat(const DIDATAFORMAT* format) override final {
+  virtual HRESULT STDMETHODCALLTYPE SetDataFormat(const DIDATAFORMAT* data_format) override final {
     LOG(VERBOSE) << "EmulatedDirectInput8Device::SetDataFormat";
 
-    if (sizeof(DIDATAFORMAT) != format->dwSize) {
+    if (sizeof(DIDATAFORMAT) != data_format->dwSize) {
       LOG(ERROR) << "EmulatedDirectInput8Device::SetDataFormat: received invalid dwSize "
-                 << format->dwSize << " (expected " << sizeof(DIDATAFORMAT) << ")";
+                 << data_format->dwSize << " (expected " << sizeof(DIDATAFORMAT) << ")";
       return DIERR_INVALIDPARAM;
     }
 
-    if (sizeof(DIOBJECTDATAFORMAT) != format->dwObjSize) {
+    if (sizeof(DIOBJECTDATAFORMAT) != data_format->dwObjSize) {
       LOG(ERROR) << "EmulatedDirectInput8Device::SetDataFormat: received invalid dwObjSize "
-                 << format->dwObjSize << " (expected " << sizeof(DIOBJECTDATAFORMAT) << ")";
+                 << data_format->dwObjSize << " (expected " << sizeof(DIOBJECTDATAFORMAT) << ")";
       return DIERR_INVALIDPARAM;
     }
 
-    if (format->dwNumObjs <= 0) {
+    if (data_format->dwNumObjs <= 0) {
       LOG(ERROR) << "EmulatedDirectInput8Device::SetDataFormat: received invalid dwNumObjs "
-                 << format->dwNumObjs;
+                 << data_format->dwNumObjs;
       return DIERR_INVALIDPARAM;
     }
 
-    // TODO: Validate the object data format?
-    object_data_format_.assign(format->rgodf, format->rgodf + format->dwNumObjs);
+    for (size_t i = 0; i < data_format->dwNumObjs; ++i) {
+      DIOBJECTDATAFORMAT* object_data_format = &data_format->rgodf[i];
+      for (auto& object : objects_) {
+        if (!object.MatchesFlags(object_data_format->dwType)) {
+          continue;
+        }
+        if (object_data_format->pguid && *object_data_format->pguid != object.guid) {
+          continue;
+        }
+        if (object.matched) {
+          continue;
+        }
+        LOG(INFO) << "matched object format to " << object.name;
+        object.matched = true;
+        device_format_.push_back({.object = observer_ptr<EmulatedDeviceObject>(&object),
+                                  .offset = object_data_format->dwOfs});
+        break;
+      }
+    }
+    LOG(INFO) << "SetDataFormat done";
     return DI_OK;
   }
 
@@ -408,6 +483,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
   virtual HRESULT STDMETHODCALLTYPE SetCooperativeLevel(HWND, DWORD flags) override final {
+    // TODO: Does this implicitly Acquire?
     std::vector<std::string> stringified_flags;
     if (flags != 0) {
       if (flags & DISCL_BACKGROUND) {
@@ -496,7 +572,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
   virtual HRESULT STDMETHODCALLTYPE Poll() override final {
     LOG(VERBOSE) << "EmulatedDirectInput8Device::Poll()";
-    return DI_NOEFFECT;
+    vdev_->Update();
+    return DI_OK;
   }
 
   virtual HRESULT STDMETHODCALLTYPE SendDeviceData(DWORD, const DIDEVICEOBJECTDATA*, DWORD*,
@@ -537,7 +614,10 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
  private:
+  observer_ptr<Device> vdev_;
   std::vector<DIOBJECTDATAFORMAT> object_data_format_;
+  std::vector<EmulatedDeviceObject> objects_;
+  std::vector<DeviceFormat> device_format_;
 };
 
 using EmulatedDirectInput8W = EmulatedDirectInput8<wchar_t>;
@@ -551,6 +631,55 @@ IDirectInput8W* GetEmulatedDirectInput8W() {
 IDirectInput8A* GetEmulatedDirectInput8A() {
   static auto instance = new EmulatedDirectInput8A(GetRealDirectInput8A());
   return instance;
+}
+
+void DeviceFormat::Apply(char* output_buffer, size_t output_buffer_length,
+                         observer_ptr<Device> virtual_device) const {
+  std::visit(
+      [&](auto&& arg) {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, std::monostate>) {
+          if (object->type & DIDFT_BUTTON) {
+            output_buffer[offset] = 0;
+            CHECK_GE(output_buffer_length, offset + 1);
+          } else if (object->type & DIDFT_AXIS) {
+            CHECK_EQ(0ULL, offset % 4);
+            CHECK_GE(output_buffer_length, offset + 4);
+            *reinterpret_cast<DWORD*>(&output_buffer[offset]) = object->range_min;
+          } else {
+            LOG(FATAL) << "unhandled type " << object->type;
+          }
+        } else if constexpr (std::is_same_v<T, AxisType>) {
+          CHECK(object->type & DIDFT_AXIS);
+          CHECK_EQ(0ULL, offset % 4);
+          CHECK_GE(output_buffer_length, offset + 4);
+          auto& axis = virtual_device->Axes()[arg];
+          double value = axis.value;
+          if (value > object->saturation) {
+            value = 1.0;
+          } else if (value < object->deadzone) {
+            value = 0.0 ;
+          }
+
+          DWORD lerped = static_cast<DWORD>(lerp(value, object->range_min, object->range_max));
+          LOG(INFO) << "setting " << object->name << " value to " << lerped;
+          *reinterpret_cast<DWORD*>(&output_buffer[offset]) = lerped;
+        } else if constexpr (std::is_same_v<T, ButtonType>) {
+          CHECK(object->type & DIDFT_BUTTON);
+          CHECK_GE(output_buffer_length, offset + 1);
+          auto value = virtual_device->Buttons()[arg].pressed;
+          output_buffer[offset] = value ? -128 : 0;
+        } else if constexpr (std::is_same_v<T, PovType>) {
+          CHECK(object->type & DIDFT_POV);
+          CHECK_EQ(0ULL, offset % 4);
+          CHECK_GE(output_buffer_length, offset + 4);
+          auto value = virtual_device->Povs()[arg].state;
+          *reinterpret_cast<DWORD*>(&output_buffer[offset]) = static_cast<DWORD>(value);
+        } else {
+          LOG(FATAL) << "unhandled type?";
+        }
+      },
+      object->mapped_object);
 }
 
 }  // namespace dhc
