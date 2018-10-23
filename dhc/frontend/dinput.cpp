@@ -8,6 +8,7 @@
 
 #include <atomic>
 
+#include "dhc/frontend/ps4.h"
 #include "dhc/logging.h"
 #include "dhc/utils.h"
 
