@@ -64,10 +64,6 @@ struct Axis {
 
   AxisType type;
   double value;  // [0, 1]
-
-  double lerp(double min, double max) const {
-    return min + value * (max - min);
-  }
 };
 
 using AxisMap = EnumMap<AxisType, Axis, AxisType::kAxisTypeCount>;

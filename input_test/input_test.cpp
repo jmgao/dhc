@@ -16,7 +16,7 @@ using namespace std::chrono_literals;
 static void PrintAxis(dhc::observer_ptr<dhc::Device> device, const char* name, dhc::AxisType type,
                       double min = -1.0, double max = 1.0) {
   auto& axis = device->Axes()[type];
-  printf("%-10s %f\n", name, axis.lerp(min, max));
+  printf("%-10s %f\n", name, dhc::lerp(axis.value, min, max));
 }
 
 static void ClearScreen() {

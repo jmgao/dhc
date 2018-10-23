@@ -16,6 +16,8 @@ namespace dhc {
 DHC_API HMODULE LoadSystemLibrary(const std::wstring& name);
 DHC_API FARPROC WINAPI GetDirectInput8Proc(const char* proc_name);
 
+inline double lerp(double value, double min, double max) { return min + value * (max - min); }
+
 // String helpers.
 template <typename Iterable>
 std::string Join(Iterable&& iterable, const std::string& glue = ", ") {
