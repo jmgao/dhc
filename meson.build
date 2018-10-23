@@ -41,6 +41,7 @@ dhc = shared_library(
     'dhc/dhc.cpp',
     'dhc/backend/dinput.cpp',
     'dhc/frontend/dinput.cpp',
+    'dhc/frontend/ps4.cpp',
     'dhc/frontend/xinput.cpp',
     'dhc/logging.cpp',
     'dhc/utils.cpp',

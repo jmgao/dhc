@@ -2,6 +2,8 @@
 
 #include <dinput.h>
 
+#include <variant>
+
 #include "dhc/dhc.h"
 
 namespace dhc {
@@ -63,5 +65,74 @@ using DI8EffectInfo = typename DI8Types<CharType>::EffectInfoType;
 
 template <typename CharType>
 using DI8DeviceImageInfoHeader = typename DI8Types<CharType>::DeviceImageInfoHeaderType;
+
+// A struct representing an input for a given device.
+struct EmulatedDeviceObject {
+  const char* name;
+
+  // GUID for the object type.
+  GUID guid;
+
+  // DIDFT_ABSAXIS, RELAXIS, PSHBUTTON, TGLBUTTON, POV, etc.
+  // Note that several of the constants are bitmasks; the values here should be individual types.
+  DWORD type;
+
+  // DIDEVICEOBJECTINSTANCE::dwFlags
+  // Should probably always contain DIDOI_POLLED?
+  DWORD flags;
+
+  // DIDFT_MAKEINSTANCE(instance_id)
+  size_t instance_id;
+
+  // Native data format of the object.
+  // TODO: Does this matter?
+  size_t offset;
+
+  // Backend object that this object maps to, or std::monostate if it's unmapped.
+  std::variant<std::monostate, AxisType, ButtonType, PovType> mapped_object;
+
+  // Properties set by SetProperty:
+  long range_min = 0;
+  long range_max = 65535;
+
+  double deadzone = 0.0;
+  double saturation = 1.0;
+
+  // Consumed by a DIOBJECTDATAFORMAT yet?
+  bool matched = false;
+
+  bool MatchesFlags(DWORD didft_flags) const {
+    if (didft_flags == DIDFT_ALL) {
+      return true;
+    }
+
+    DWORD type_mask = DIDFT_GETTYPE(didft_flags);
+    if ((type_mask & type) == 0) {
+      return false;
+    }
+
+    DWORD instance_mask = didft_flags & DIDFT_INSTANCEMASK;
+    if ((instance_mask & DIDFT_MAKEINSTANCE(instance_id)) == 0) {
+      return false;
+    }
+
+    return true;
+  }
+
+  DWORD Identifier() const {
+    return type | DIDFT_MAKEINSTANCE(instance_id);
+  }
+};
+
+std::vector<EmulatedDeviceObject> GeneratePS4EmulatedDeviceObjects();
+
+struct DeviceFormat {
+  observer_ptr<EmulatedDeviceObject> object;
+  size_t offset;
+
+  void Apply(char* output_buffer, size_t output_buffer_length,
+             observer_ptr<Device> virtual_device) const;
+};
+
 
 }  // namespace dhc
