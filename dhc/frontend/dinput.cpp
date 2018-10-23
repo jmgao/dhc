@@ -271,7 +271,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     }
     if (flags & DIDFT_PSHBUTTON) {
       objects.push_back(kDIButtonSquare);
-      objects.push_back(kDIButtonX);
+      objects.push_back(kDIButtonCross);
       objects.push_back(kDIButtonCircle);
       objects.push_back(kDIButtonTriangle);
 

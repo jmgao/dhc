@@ -117,7 +117,7 @@ static const DirectInputButtonConf kDIAxisR2 = {
     DIDOI_ASPECTPOSITION,
     24,
     DIDFT_ABSAXIS | DIDFT_MAKEINSTANCE(4),
-    GUID_RxAxis,
+    GUID_RyAxis,
     "Y Rotation",
 };
 
@@ -129,14 +129,6 @@ static const DirectInputButtonConf kDIDPad = {
     "Hat Switch",
 };
 
-// No idea what this is, but it's what consistently gets returned for a PS4 controller.
-static constexpr GUID GUID_Button = {
-    0xa36d02f0,
-    0xc9f3,
-    0x11cf,
-    {0xbf, 0xc7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00},
-};
-
 static const DirectInputButtonConf kDIButtonSquare = {
     0,
     220,
@@ -145,7 +137,7 @@ static const DirectInputButtonConf kDIButtonSquare = {
     "Button 0",
 };
 
-static const DirectInputButtonConf kDIButtonX = {
+static const DirectInputButtonConf kDIButtonCross = {
     0,
     221,
     DIDFT_PSHBUTTON | DIDFT_MAKEINSTANCE(1),
@@ -242,9 +234,9 @@ static const DirectInputButtonConf kDIButtonPS = {
 static const DirectInputButtonConf kDIButtonTrackpad = {
     0,
     233,
-    DIDFT_PSHBUTTON | DIDFT_MAKEINSTANCE(1),
+    DIDFT_PSHBUTTON | DIDFT_MAKEINSTANCE(13),
     GUID_Button,
-    "Button 2",
+    "Button 13",
 };
 
 static const DirectInputButtonConf kDICollectionGamepad = {
