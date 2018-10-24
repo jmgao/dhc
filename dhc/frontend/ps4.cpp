@@ -161,9 +161,6 @@ std::vector<EmulatedDeviceObject> GeneratePS4EmulatedDeviceObjects() {
                     .offset = 16,
                     .mapped_object = PovType::DPad});
 
-  for (auto& object : result) {
-    object.type |= DIDOI_POLLED;
-  }
   return result;
 }
 
