@@ -249,7 +249,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   using EnumObjectsCallback = BOOL(PASCAL*)(const DI8DeviceObjectInstance<CharType>*, void*);
   virtual HRESULT STDMETHODCALLTYPE EnumObjects(EnumObjectsCallback callback, void* callback_arg,
                                                 DWORD flags) override final {
-    LOG(VERBOSE) << "EmulatedDirectInput8Device::EnumObjects(flags = " << flags << ")";
+    LOG(VERBOSE) << "EmulatedDirectInput8Device::EnumObjects(" << didft_to_string(flags) << ")";
 
     if (LOWORD(flags) >> 8) {
       // Asked for a non-zero enum collection.
@@ -267,10 +267,12 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
       obj.dwSize = sizeof(obj);
       obj.guidType = object.guid;
       obj.dwOfs = object.offset;
-      obj.dwType = object.type;
+      obj.dwType = object.type | DIDFT_MAKEINSTANCE(object.instance_id);
       obj.dwFlags = object.flags;
       tstrncpy(obj.tszName, object.name, MAX_PATH);
-      // TODO: HID stuff?
+
+      LOG(INFO) << "Enumerating object " << obj.tszName << ": " << didft_to_string(obj.dwType);
+
       if (callback(&obj, callback_arg) != DIENUM_CONTINUE) {
         return DI_OK;
       }
@@ -337,7 +339,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
         return false;
 
       case DIPH_BYID:
-        LOG(INFO) << "FindPropertyObject(DIPH_BYID(" << prop_header->dwObj << "))";
+        LOG(INFO) << "FindPropertyObject(DIPH_BYID(" << didft_to_string(prop_header->dwObj) << "))";
         for (auto& object : objects_) {
           if (object.MatchesType(prop_header->dwObj)) {
             *out_object = observer_ptr<EmulatedDeviceObject>(&object);
