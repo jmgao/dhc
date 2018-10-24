@@ -355,8 +355,6 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
   virtual HRESULT STDMETHODCALLTYPE SetProperty(REFGUID guid,
                                                 const DIPROPHEADER* prop_header) override final {
-    LOG(INFO) << "EmulatedDirectInput8Device::SetProperty(" << GetDIPropName(guid) << ")";
-
     if (prop_header->dwHeaderSize != sizeof(DIPROPHEADER)) {
       LOG(ERROR) << "SetProperty got invalid header size: " << prop_header->dwHeaderSize;
       return DIERR_INVALIDPARAM;
@@ -368,6 +366,9 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
       LOG(ERROR) << "SetProperty failed to find object";
       return DIERR_OBJECTNOTFOUND;
     }
+
+    LOG(INFO) << "EmulatedDirectInput8Device::SetProperty(" << GetDIPropName(guid) << ", "
+              << object->name << ")";
 
     // These aren't equivalent to `guid == DIPROP_FOO`, because fuck you, that's why.
     if (&guid == &DIPROP_DEADZONE || &guid == &DIPROP_SATURATION) {
@@ -388,9 +389,21 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
       }
       return DI_OK;
     } else if (&guid == &DIPROP_RANGE) {
-      if (!object) return DIERR_INVALIDPARAM;
-      if (!(object->type & DIDFT_AXIS)) return DIERR_INVALIDPARAM;
-      if (prop_header->dwSize != sizeof(DIPROPRANGE)) return DIERR_INVALIDPARAM;
+      if (!object) {
+        LOG(ERROR) << "couldn't find object";
+        return DIERR_INVALIDPARAM;
+      }
+
+      if (!(object->type & DIDFT_AXIS)) {
+        LOG(ERROR) << "type isn't axis";
+        return DIERR_INVALIDPARAM;
+      }
+
+      if (prop_header->dwSize != sizeof(DIPROPRANGE)) {
+        LOG(ERROR) << "dwSize mismatch";
+        return DIERR_INVALIDPARAM;
+      }
+
       const DIPROPRANGE* range = reinterpret_cast<const DIPROPRANGE*>(prop_header);
       // TODO: Should we check that max > min?
       LOG(INFO) << "Setting range for axis " << object->name << " to [" << range->lMin << ", "
