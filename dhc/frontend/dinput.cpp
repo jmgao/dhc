@@ -424,7 +424,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
   virtual HRESULT STDMETHODCALLTYPE GetDeviceState(DWORD size, void* buffer) override final {
-    LOG(VERBOSE) << "EmulatedDirectInput8Device::GetDeviceState(" << size << ")";
+    LOG(DEBUG) << "EmulatedDirectInput8Device::GetDeviceState(" << size << ")";
     memset(buffer, 0, size);
     for (const auto& fmt : device_formats_) {
       fmt.Apply(static_cast<char*>(buffer), size, vdev_);
@@ -610,7 +610,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
   virtual HRESULT STDMETHODCALLTYPE Poll() override final {
-    LOG(VERBOSE) << "EmulatedDirectInput8Device::Poll()";
+    LOG(DEBUG) << "EmulatedDirectInput8Device::Poll()";
     vdev_->Update();
     return DI_OK;
   }
@@ -703,9 +703,9 @@ void DeviceFormat::Apply(char* output_buffer, size_t output_buffer_length,
           }
 
           DWORD lerped = static_cast<DWORD>(lerp(value, object->range_min, object->range_max));
-          LOG(INFO) << "lerping " << object->name << " value " << value << " onto ["
-                    << object->range_min << ", " << object->range_max
-                    << "] = " << static_cast<long>(lerped);
+          LOG(VERBOSE) << "lerping " << object->name << " value " << value << " onto ["
+                     << object->range_min << ", " << object->range_max
+                     << "] = " << static_cast<long>(lerped);
           *reinterpret_cast<DWORD*>(&output_buffer[offset]) = lerped;
         } else if constexpr (std::is_same_v<T, ButtonType>) {
           CHECK(object->type & DIDFT_BUTTON);

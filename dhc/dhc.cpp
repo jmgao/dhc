@@ -13,8 +13,8 @@ BOOL WINAPI DllMain(HMODULE module, DWORD reason, void*) {
       DisableThreadLibraryCalls(module);
       InitLogging(nullptr);
       CreateLogConsole();
-      CreateLogFile("log.txt");
-      SetMinimumLogSeverity(VERBOSE);
+      CreateLogFile("dhc.log");
+      SetMinimumLogSeverity(INFO);
       break;
 
     case DLL_THREAD_ATTACH:
