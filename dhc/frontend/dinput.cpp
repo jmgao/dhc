@@ -414,8 +414,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
   virtual HRESULT STDMETHODCALLTYPE Acquire() override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+    LOG(WARNING) << "Acquire unimplemented";
+    return DI_OK;
   }
 
   virtual HRESULT STDMETHODCALLTYPE Unacquire() override final {

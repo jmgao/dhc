@@ -27,7 +27,6 @@ static void ClearScreen() {
 
 int main() {
   dhc::logging::SetMinimumLogSeverity(dhc::logging::INFO);
-
   auto ctx = dhc::Context::GetInstance();
   auto device = ctx->GetDevice(0);
   CHECK(device != nullptr);
