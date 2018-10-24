@@ -365,7 +365,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     // Find the object that's referenced.
     observer_ptr<EmulatedDeviceObject> object;
     if (!FindPropertyObject(&object, prop_header)) {
-      LOG(ERROR) << "SetProperty failed to find object";
+      LOG(ERROR) << "EmulatedDirectInput8Device::SetProperty(" << GetDIPropName(guid)
+                 << ") failed to find object";
       return DIERR_OBJECTNOTFOUND;
     }
 
@@ -374,7 +375,6 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
     // These aren't equivalent to `guid == DIPROP_FOO`, because fuck you, that's why.
     if (&guid == &DIPROP_DEADZONE || &guid == &DIPROP_SATURATION) {
-      if (!object) return DIERR_INVALIDPARAM;
       if (prop_header->dwSize != sizeof(DIPROPDWORD)) return DIERR_INVALIDPARAM;
       if (!(object->type & DIDFT_AXIS)) return DIERR_INVALIDPARAM;
       DWORD value = reinterpret_cast<const DIPROPDWORD*>(prop_header)->dwData;
@@ -391,11 +391,6 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
       }
       return DI_OK;
     } else if (&guid == &DIPROP_RANGE) {
-      if (!object) {
-        LOG(ERROR) << "couldn't find object";
-        return DIERR_INVALIDPARAM;
-      }
-
       if (!(object->type & DIDFT_AXIS)) {
         LOG(ERROR) << "type isn't axis";
         return DIERR_INVALIDPARAM;
