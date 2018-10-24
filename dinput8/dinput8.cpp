@@ -38,8 +38,8 @@ extern "C" HRESULT WINAPI DirectInput8Create(HINSTANCE hinst, DWORD version,
 
 #if 0
   // Passthrough
-  static auto real =
-      reinterpret_cast<decltype(&DirectInput8Create)>(GetDirectInput8Proc("DirectInput8Create"));
+  static auto real = reinterpret_cast<decltype(&DirectInput8Create)>(
+      dhc::GetDirectInput8Proc("DirectInput8Create"));
   return real(hinst, version, desired_interface, out_interface, unknown);
 #else
   IUnknown* result;
