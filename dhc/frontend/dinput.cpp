@@ -7,29 +7,20 @@
 #include "dhc/frontend/dinput.h"
 
 #include <atomic>
+#include <deque>
+#include <string>
 #include <type_traits>
 #include <variant>
+#include <vector>
 
 #include "dhc/logging.h"
 #include "dhc/utils.h"
 
+using namespace std::string_literals;
+
 using namespace dhc::logging;
 
 namespace dhc {
-
-static std::string to_string(REFGUID guid) {
-  if (guid == GUID_SysKeyboard) {
-    return "GUID_SysKeyboard";
-  } else if (guid == GUID_SysMouse) {
-    return "GUID_SysMouse";
-  } else if (guid == GUID_DHC_P1) {
-    return "GUID_DHC_P1";
-  } else if (guid == GUID_DHC_P2) {
-    return "GUID_DHC_P2";
-  } else {
-    return "unknown";
-  }
-}
 
 template <typename CharType>
 class EmulatedDirectInputDevice8;
@@ -456,6 +447,15 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
     for (size_t i = 0; i < data_format->dwNumObjs; ++i) {
       DIOBJECTDATAFORMAT* object_data_format = &data_format->rgodf[i];
+      LOG(INFO) << "DIObjectDataFormat " << i;
+      if (object_data_format->pguid) {
+        LOG(INFO) << " GUID = " << to_string(*object_data_format->pguid);
+      } else {
+        LOG(INFO) << " GUID = <none>";
+      }
+      LOG(INFO) << "  offset = " << object_data_format->dwOfs;
+      LOG(INFO) << "  type = " << didft_to_string(object_data_format->dwType);
+      LOG(INFO) << "  flags = " << didoi_to_string(object_data_format->dwFlags);
       for (auto& object : objects_) {
         if (!object.MatchesFlags(object_data_format->dwType)) {
           continue;
@@ -466,7 +466,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
         if (object.matched) {
           continue;
         }
-        LOG(INFO) << "matched object format to " << object.name;
+        LOG(INFO) << "  matched object format to " << object.name;
         object.matched = true;
         device_format_.push_back({.object = observer_ptr<EmulatedDeviceObject>(&object),
                                   .offset = object_data_format->dwOfs});

@@ -32,6 +32,10 @@ std::string Join(Iterable&& iterable, const std::string& glue = ", ") {
   return result;
 }
 
+std::string didoi_to_string(DWORD flags);
+std::string didft_to_string(DWORD type);
+std::string to_string(REFGUID guid);
+
 // Unicode helpers.
 DHC_API std::string to_string(const std::string& str);
 DHC_API std::string to_string(const std::wstring& wstr);
