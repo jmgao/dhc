@@ -37,6 +37,8 @@ std::vector<EmulatedDeviceObject> GeneratePS4EmulatedDeviceObjects() {
                     .instance_id = 5,
                     .offset = 0,
                     .mapped_object = AxisType::RStickY});
+
+#if defined(ENABLE_TRIGGERS)
   result.push_back({.name = "X Rotation",
                     .guid = GUID_RxAxis,
                     .type = DIDFT_ABSAXIS,
@@ -51,6 +53,7 @@ std::vector<EmulatedDeviceObject> GeneratePS4EmulatedDeviceObjects() {
                     .instance_id = 4,
                     .offset = 24,
                     .mapped_object = AxisType::RTrigger});
+#endif
 
   // Buttons
   result.push_back({.name = "Button 0",
