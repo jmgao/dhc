@@ -180,7 +180,6 @@ static PovState PovStateFromDword(DWORD pov) {
 }
 
 void DinputProvider::Refresh(observer_ptr<DeviceAssignment> assignment) {
-  LOG(INFO) << "device " << assignment->virtual_device_->Id() << " refresh";
   HRESULT rc = assignment->real_device_->Poll();
   if (rc != DI_OK && rc != DI_NOEFFECT) {
     LOG(ERROR) << "failed to Poll on device " << assignment->virtual_device_->Id() << ": "
