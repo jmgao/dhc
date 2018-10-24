@@ -110,15 +110,18 @@ struct EmulatedDeviceObject {
 
     DWORD type_mask = DIDFT_GETTYPE(didft);
     if ((type_mask & type) == 0) {
+      LOG(INFO) << name << " type mismatch";
       return false;
     }
     didft &= ~type_mask;
 
-    DWORD instance_mask = didft & DIDFT_INSTANCEMASK;
-    if (instance_mask != DIDFT_ANYINSTANCE && DIDFT_GETINSTANCE(instance_mask) != instance_id) {
+    if ((didft & DIDFT_INSTANCEMASK) != DIDFT_ANYINSTANCE &&
+        DIDFT_GETINSTANCE(didft) != instance_id) {
+      LOG(INFO) << name << " instance mismatch (want = " << DIDFT_GETINSTANCE(didft)
+                << ", self = " << instance_id << ")";
       return false;
     }
-    didft &= ~instance_mask;
+    didft &= ~DIDFT_INSTANCEMASK;
 
     didft &= ~DIDFT_OPTIONAL;
 
@@ -130,8 +133,9 @@ struct EmulatedDeviceObject {
     return true;
   }
 
-  bool MatchesFlags(DWORD didoi) const {
-    return (didoi & flags) == didoi;
+  bool MatchesFlags(DWORD) const {
+    // These seem to be ignored completely by Wine?
+    return true;
   }
 
   DWORD Identifier() const {
