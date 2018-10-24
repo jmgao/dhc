@@ -95,6 +95,14 @@ void DinputProvider::ScanLocked() {
   LOG(INFO) << "finished scanning in " << (end - begin) / 1.0ms << "ms";
 }
 
+static WINAPI BOOL EnumerateObjectCallback(const DIDEVICEOBJECTINSTANCE* object, void*) {
+  LOG(INFO) << "Object " << object->tszName;
+  LOG(INFO) << "  GUID: " << to_string(object->guidType);
+  LOG(INFO) << "  Type: " << didft_to_string(object->dwType);
+  LOG(INFO) << "  Flags: " << didoi_to_string(object->dwFlags);
+  return true;
+}
+
 bool DinputProvider::EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> device) {
   if (available_devices_.empty()) {
     return true;
@@ -111,6 +119,13 @@ bool DinputProvider::EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> devic
   if (rc != DI_OK) {
     LOG(ERROR) << "failed to CreateDevice(" << device->tszInstanceName
                << "): " << dierr_to_string(rc);
+    return true;
+  }
+
+  rc = real_device->EnumObjects(EnumerateObjectCallback, nullptr, DIDFT_ALL);
+  if (rc != DI_OK) {
+    LOG(ERROR) << "failed to EnumObjects on device " << device->tszInstanceName
+               << ": " << dierr_to_string(rc);
     return true;
   }
 
