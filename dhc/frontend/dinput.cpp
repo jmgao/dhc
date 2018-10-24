@@ -331,7 +331,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
         return false;
 
       case DIPH_BYUSAGE:
-        LOG(WARNING) << "DIPH_BYUSAGE unimplemented";
+        LOG(FATAL) << "DIPH_BYUSAGE unimplemented";
         return false;
 
       case DIPH_BYID:
