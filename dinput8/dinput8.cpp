@@ -46,7 +46,7 @@ extern "C" HRESULT WINAPI DirectInput8Create(HINSTANCE hinst, DWORD version,
   if (unicode) {
     result = dhc::GetEmulatedDirectInput8W();
   } else {
-    result = dhc::GetEmulatedDirectInput8W();
+    result = dhc::GetEmulatedDirectInput8A();
   }
 
   result->AddRef();
