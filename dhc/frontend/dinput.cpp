@@ -702,7 +702,9 @@ void DeviceFormat::Apply(char* output_buffer, size_t output_buffer_length,
           }
 
           DWORD lerped = static_cast<DWORD>(lerp(value, object->range_min, object->range_max));
-          LOG(INFO) << "setting " << object->name << " value to " << lerped;
+          LOG(INFO) << "lerping " << object->name << " value " << value << " onto ["
+                    << object->range_min << ", " << object->range_max
+                    << "] = " << static_cast<long>(lerped);
           *reinterpret_cast<DWORD*>(&output_buffer[offset]) = lerped;
         } else if constexpr (std::is_same_v<T, ButtonType>) {
           CHECK(object->type & DIDFT_BUTTON);
