@@ -685,7 +685,8 @@ void DeviceFormat::Apply(char* output_buffer, size_t output_buffer_length,
           } else if (object->type & DIDFT_AXIS) {
             CHECK_EQ(0ULL, offset % 4);
             CHECK_GE(output_buffer_length, offset + 4);
-            *reinterpret_cast<DWORD*>(&output_buffer[offset]) = object->range_min;
+            *reinterpret_cast<DWORD*>(&output_buffer[offset]) =
+                (object->range_min + object->range_max) / 2;
           } else {
             LOG(FATAL) << "unhandled type " << object->type;
           }
