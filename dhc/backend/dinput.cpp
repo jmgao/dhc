@@ -233,9 +233,9 @@ void DinputProvider::Release(observer_ptr<DeviceAssignment> assignment) {
   assignment->real_device_->Unacquire();
 
   auto vdev = assignment->virtual_device_;
-
-  // TODO: Sort by ID?
   available_devices_.push_front(vdev);
+  std::sort(available_devices_.begin(), available_devices_.end(),
+            [](observer_ptr<Device> lhs, observer_ptr<Device> rhs) { return lhs->id_ < rhs->id_; });
 
   for (auto it = assignments_.begin(); it != assignments_.end(); ++it) {
     if (it->get() == assignment.get()) {
