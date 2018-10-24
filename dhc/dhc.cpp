@@ -75,6 +75,8 @@ void Device::Reset() {
   for (auto &trigger : {AxisType::LTrigger, AxisType::RTrigger}) {
     axes_[trigger].value = 0.0;
   }
+
+  povs_[DPad].state = PovState::Neutral;
 }
 
 void Device::Update() {
