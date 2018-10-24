@@ -5,6 +5,8 @@
 #include <variant>
 
 #include "dhc/dhc.h"
+#include "dhc/logging.h"
+#include "dhc/utils.h"
 
 namespace dhc {
 
@@ -101,22 +103,35 @@ struct EmulatedDeviceObject {
   // Consumed by a DIOBJECTDATAFORMAT yet?
   bool matched = false;
 
-  bool MatchesFlags(DWORD didft_flags) const {
-    if (didft_flags == DIDFT_ALL) {
+  bool MatchesType(DWORD didft) {
+    if (didft == DIDFT_ALL) {
       return true;
     }
 
-    DWORD type_mask = DIDFT_GETTYPE(didft_flags);
+    DWORD type_mask = DIDFT_GETTYPE(didft);
     if ((type_mask & type) == 0) {
       return false;
     }
+    didft &= ~type_mask;
 
-    DWORD instance_mask = didft_flags & DIDFT_INSTANCEMASK;
-    if ((instance_mask & DIDFT_MAKEINSTANCE(instance_id)) == 0) {
+    DWORD instance_mask = didft & DIDFT_INSTANCEMASK;
+    if (instance_mask != DIDFT_ANYINSTANCE && DIDFT_GETINSTANCE(instance_mask) != instance_id) {
+      return false;
+    }
+    didft &= ~instance_mask;
+
+    didft &= ~DIDFT_OPTIONAL;
+
+    if (didft != 0) {
+      LOG(INFO) << "leftover flags: " << didft_to_string(didft);
       return false;
     }
 
     return true;
+  }
+
+  bool MatchesFlags(DWORD didoi) const {
+    return (didoi & flags) == didoi;
   }
 
   DWORD Identifier() const {

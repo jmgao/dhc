@@ -456,21 +456,39 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
       LOG(INFO) << "  offset = " << object_data_format->dwOfs;
       LOG(INFO) << "  type = " << didft_to_string(object_data_format->dwType);
       LOG(INFO) << "  flags = " << didoi_to_string(object_data_format->dwFlags);
+
+      bool matched = false;
       for (auto& object : objects_) {
-        if (!object.MatchesFlags(object_data_format->dwType)) {
-          continue;
-        }
-        if (object_data_format->pguid && *object_data_format->pguid != object.guid) {
-          continue;
-        }
         if (object.matched) {
           continue;
         }
+
+        if (!object.MatchesType(object_data_format->dwType)) {
+          continue;
+        }
+
+        if (!object.MatchesFlags(object_data_format->dwFlags)) {
+          continue;
+        }
+
+        if (object_data_format->pguid && *object_data_format->pguid != object.guid) {
+          continue;
+        }
         LOG(INFO) << "  matched object format to " << object.name;
+        matched = true;
         object.matched = true;
         device_format_.push_back({.object = observer_ptr<EmulatedDeviceObject>(&object),
                                   .offset = object_data_format->dwOfs});
         break;
+      }
+
+      if (!matched) {
+        if ((object_data_format->dwType & DIDFT_OPTIONAL)) {
+          LOG(INFO) << "failed to match optional object";
+        } else {
+          LOG(ERROR) << "failed to match required object";
+          return DIERR_OBJECTNOTFOUND;
+        }
       }
     }
     LOG(INFO) << "SetDataFormat done";
