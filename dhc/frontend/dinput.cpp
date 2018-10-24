@@ -384,10 +384,10 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
       }
       if (&guid == &DIPROP_DEADZONE) {
         LOG(INFO) << "Setting dead zone for axis " << object->name << " to " << value;
-        object->deadzone = value;
+        object->deadzone = value / 10000.0;
       } else if (&guid == &DIPROP_SATURATION) {
         LOG(INFO) << "Setting saturation for axis " << object->name << " to " << value;
-        object->saturation = value;
+        object->saturation = value / 10000.0;
       }
       return DI_OK;
     } else if (&guid == &DIPROP_RANGE) {
@@ -695,10 +695,11 @@ void DeviceFormat::Apply(char* output_buffer, size_t output_buffer_length,
           CHECK_GE(output_buffer_length, offset + 4);
           auto& axis = virtual_device->Axes()[arg];
           double value = axis.value;
-          if (value > object->saturation) {
-            value = 1.0;
-          } else if (value < object->deadzone) {
-            value = 0.0 ;
+          double distance = abs(value - 0.5);
+          if (distance * 2 >= object->saturation) {
+            value = value > 0.5 ? 1.0 : 0.0;
+          } else if (distance * 2 <= object->deadzone) {
+            value = 0.5;
           }
 
           DWORD lerped = static_cast<DWORD>(lerp(value, object->range_min, object->range_max));
