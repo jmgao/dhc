@@ -319,10 +319,12 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
                           const DIPROPHEADER* prop_header) {
     switch (prop_header->dwHow) {
       case DIPH_DEVICE:
+        LOG(INFO) << "FindPropertyObject(DIPH_DEVICE)";
         return true;
 
       case DIPH_BYOFFSET:
-        for (const auto& format : device_format_) {
+        LOG(INFO) << "FindPropertyObject(DIPH_BYOFFSET(" << prop_header->dwObj << ")";
+        for (const auto& format : device_formats_) {
           if (format.offset == prop_header->dwObj) {
             *out_object = format.object;
             return true;
@@ -335,8 +337,9 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
         return false;
 
       case DIPH_BYID:
+        LOG(INFO) << "FindPropertyObject(DIPH_BYID(" << prop_header->dwObj << "))";
         for (auto& object : objects_) {
-          if (object.Identifier() == prop_header->dwObj) {
+          if (object.MatchesType(prop_header->dwObj)) {
             *out_object = observer_ptr<EmulatedDeviceObject>(&object);
             return true;
           }
