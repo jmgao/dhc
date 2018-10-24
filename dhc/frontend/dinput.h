@@ -149,5 +149,10 @@ struct DeviceFormat {
              observer_ptr<Device> virtual_device) const;
 };
 
+// Some fields (e.g. POV hats) need to be set to non-zero values if not found.
+struct DeviceFormatDefault {
+  size_t offset;
+  DWORD value;
+};
 
 }  // namespace dhc

@@ -424,9 +424,14 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
   virtual HRESULT STDMETHODCALLTYPE GetDeviceState(DWORD size, void* buffer) override final {
-    LOG(VERBOSE) << "EmulatedDirectInput8Device::GetDeviceState";
-    for (const auto& fmt : device_format_) {
+    LOG(VERBOSE) << "EmulatedDirectInput8Device::GetDeviceState(" << size << ")";
+    memset(buffer, 0, size);
+    for (const auto& fmt : device_formats_) {
       fmt.Apply(static_cast<char*>(buffer), size, vdev_);
+    }
+    for (const auto& fmt_default : device_format_defaults_) {
+      *reinterpret_cast<DWORD*>(static_cast<char*>(buffer) + fmt_default.offset) =
+          fmt_default.value;
     }
     return DI_OK;
   }
@@ -490,13 +495,16 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
         LOG(INFO) << "  matched object format to " << object.name;
         matched = true;
         object.matched = true;
-        device_format_.push_back({.object = observer_ptr<EmulatedDeviceObject>(&object),
-                                  .offset = object_data_format->dwOfs});
+        device_formats_.push_back({.object = observer_ptr<EmulatedDeviceObject>(&object),
+                                   .offset = object_data_format->dwOfs});
         break;
       }
 
       if (!matched) {
         if ((object_data_format->dwType & DIDFT_OPTIONAL)) {
+          if (object_data_format->pguid && *object_data_format->pguid == GUID_POV) {
+            device_format_defaults_.push_back({.offset = object_data_format->dwOfs, .value = -1UL});
+          }
           LOG(INFO) << "failed to match optional object";
         } else {
           LOG(ERROR) << "failed to match required object";
@@ -648,7 +656,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   observer_ptr<Device> vdev_;
   std::vector<DIOBJECTDATAFORMAT> object_data_format_;
   std::vector<EmulatedDeviceObject> objects_;
-  std::vector<DeviceFormat> device_format_;
+  std::vector<DeviceFormat> device_formats_;
+  std::vector<DeviceFormatDefault> device_format_defaults_;
 };
 
 using EmulatedDirectInput8W = EmulatedDirectInput8<wchar_t>;
