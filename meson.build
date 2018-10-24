@@ -75,10 +75,20 @@ xinput1_3 = shared_library(
   install_dir: join_paths(meson.current_build_dir(), 'dist'),
 )
 
-input_test = executable(
-  'input_test',
+dhc_test = executable(
+  'dhc_test',
   link_with: [dhc],
-  sources: ['input_test/input_test.cpp'],
+  sources: ['test/dhc_test.cpp'],
+
+  install: true,
+  install_dir: join_paths(meson.current_build_dir(), 'dist'),
+)
+
+dinput_test = executable(
+  'dinput_test',
+  link_with: [dhc],
+  sources: ['test/dinput_test.cpp'],
+  link_args: ['-ldinput8', '-ldxguid'],
 
   install: true,
   install_dir: join_paths(meson.current_build_dir(), 'dist'),
