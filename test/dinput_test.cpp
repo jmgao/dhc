@@ -136,7 +136,7 @@ int main() {
   AXES(GUID_Slider, Slider);
 
   for (int i = 0; i < 32; ++i) {
-    object_data_formats.push_back({&GUID_Button, offsetof(Data, buttons) + i,
+    object_data_formats.push_back({&GUID_Button, static_cast<DWORD>(offsetof(Data, buttons) + i),
                                    DIDFT_AXIS | DIDFT_OPTIONAL | DIDFT_MAKEINSTANCE(i), 0});
   }
 
