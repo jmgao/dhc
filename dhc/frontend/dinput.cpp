@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "dhc/logging.h"
+#include "dhc/timer.h"
 #include "dhc/utils.h"
 
 using namespace std::string_literals;
@@ -425,6 +426,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
   virtual HRESULT STDMETHODCALLTYPE GetDeviceState(DWORD size, void* buffer) override final {
     LOG(DEBUG) << "EmulatedDirectInput8Device::GetDeviceState(" << size << ")";
+    Timer timer;
     memset(buffer, 0, size);
     for (const auto& fmt : device_formats_) {
       fmt.Apply(static_cast<char*>(buffer), size, vdev_);
@@ -611,6 +613,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
   virtual HRESULT STDMETHODCALLTYPE Poll() override final {
     LOG(DEBUG) << "EmulatedDirectInput8Device::Poll()";
+    Timer timer;
     vdev_->Update();
     return DI_OK;
   }
