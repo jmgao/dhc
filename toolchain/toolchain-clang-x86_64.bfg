@@ -1,0 +1,12 @@
+target_platform('winnt')
+
+compiler(['clang++-8', 'clang++'], 'c++')
+compile_options([
+  '--target=x86_64-w64-mingw',
+  '-fno-exceptions',
+], 'c++')
+
+link_options([
+  '--target=x86_64-w64-mingw',
+  '-Wl,--allow-multiple-definition',
+])
