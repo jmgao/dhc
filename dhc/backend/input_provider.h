@@ -10,7 +10,7 @@ struct InputProvider {
   InputProvider(const InputProvider& copy) = delete;
   InputProvider(InputProvider&& move) = delete;
 
-  ~InputProvider() = default;
+  virtual ~InputProvider() = default;
 
   virtual void Assign(observer_ptr<Device> device) = 0;
   virtual void Revoke(observer_ptr<Device> device) = 0;
