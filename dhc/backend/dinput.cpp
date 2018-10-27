@@ -129,8 +129,8 @@ bool DinputProvider::EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> devic
 
   rc = real_device->EnumObjects(EnumerateObjectCallback, nullptr, DIDFT_ALL);
   if (rc != DI_OK) {
-    LOG(ERROR) << "failed to EnumObjects on device " << device->tszInstanceName
-               << ": " << dierr_to_string(rc);
+    LOG(ERROR) << "failed to EnumObjects on device " << device->tszInstanceName << ": "
+               << dierr_to_string(rc);
     return true;
   }
 

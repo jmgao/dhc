@@ -6,8 +6,8 @@
 #include <memory>
 #include <string>
 
-#include "dhc/types.h"
 #include "dhc/macros.h"
+#include "dhc/types.h"
 
 namespace dhc {
 
@@ -158,4 +158,4 @@ struct Device {
   friend struct DinputProvider;
 };
 
-}
+}  // namespace dhc

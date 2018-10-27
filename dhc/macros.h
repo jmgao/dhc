@@ -7,7 +7,7 @@
 #endif
 
 #if defined(_MSC_VER)
-#define MSVC_SUPPRESS(warnings) __pragma(warning(suppress: warnings))
+#define MSVC_SUPPRESS(warnings) __pragma(warning(suppress : warnings))
 #else
 #define MSVC_SUPPRESS(warnings)
 #endif

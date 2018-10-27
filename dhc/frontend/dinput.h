@@ -138,9 +138,7 @@ struct EmulatedDeviceObject {
     return true;
   }
 
-  DWORD Identifier() const {
-    return type | DIDFT_MAKEINSTANCE(instance_id);
-  }
+  DWORD Identifier() const { return type | DIDFT_MAKEINSTANCE(instance_id); }
 };
 
 std::vector<EmulatedDeviceObject> GeneratePS4EmulatedDeviceObjects();

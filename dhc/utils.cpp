@@ -169,7 +169,7 @@ std::string didft_to_string(DWORD type) {
 
   if (result.empty()) {
     return "0";
-  } 
+  }
   return Join(result, " | ");
 }
 

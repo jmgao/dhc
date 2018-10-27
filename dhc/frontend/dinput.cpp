@@ -30,8 +30,7 @@ class EmulatedDirectInputDevice8;
 template <typename CharType>
 class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
  public:
-  explicit EmulatedDirectInput8(com_ptr<DI8Interface<CharType>> real)
-      : real_(std::move(real)) {
+  explicit EmulatedDirectInput8(com_ptr<DI8Interface<CharType>> real) : real_(std::move(real)) {
     auto ctx = Context::GetInstance();
 
     p1_.reset(new EmulatedDirectInputDevice8<CharType>(ctx->GetDevice(0)));
@@ -201,8 +200,7 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
 template <typename CharType>
 class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>> {
  public:
-  explicit EmulatedDirectInputDevice8(observer_ptr<Device> virtual_device)
-      : vdev_(virtual_device) {
+  explicit EmulatedDirectInputDevice8(observer_ptr<Device> virtual_device) : vdev_(virtual_device) {
     objects_ = GeneratePS4EmulatedDeviceObjects();
   }
 
@@ -380,8 +378,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
       if (!(object->type & DIDFT_AXIS)) return DIERR_INVALIDPARAM;
       DWORD value = reinterpret_cast<const DIPROPDWORD*>(prop_header)->dwData;
       if (value < 0 || value > 10000) {
-          // TODO: Does the reference implementation return an error here?
-          return DIERR_INVALIDPARAM;
+        // TODO: Does the reference implementation return an error here?
+        return DIERR_INVALIDPARAM;
       }
       if (&guid == &DIPROP_DEADZONE) {
         LOG(INFO) << "Setting dead zone for axis " << object->name << " to " << value;
@@ -708,8 +706,8 @@ void DeviceFormat::Apply(char* output_buffer, size_t output_buffer_length,
 
           DWORD lerped = static_cast<DWORD>(lerp(value, object->range_min, object->range_max));
           LOG(VERBOSE) << "lerping " << object->name << " value " << value << " onto ["
-                     << object->range_min << ", " << object->range_max
-                     << "] = " << static_cast<long>(lerped);
+                       << object->range_min << ", " << object->range_max
+                       << "] = " << static_cast<long>(lerped);
           *reinterpret_cast<DWORD*>(&output_buffer[offset]) = lerped;
         } else if constexpr (std::is_same_v<T, ButtonType>) {
           CHECK(object->type & DIDFT_BUTTON);

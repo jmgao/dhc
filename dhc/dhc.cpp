@@ -7,7 +7,7 @@
 
 using namespace dhc::logging;
 
-BOOL WINAPI DllMain(HMODULE module, DWORD reason, void*) {
+BOOL WINAPI DllMain(HMODULE module, DWORD reason, void *) {
   switch (reason) {
     case DLL_PROCESS_ATTACH:
       DisableThreadLibraryCalls(module);
@@ -46,7 +46,6 @@ REFGUID AxisToGUID(AxisType axis_type) {
   }
   __builtin_unreachable();
 }
-
 
 Context::Context(std::unique_ptr<InputProvider> provider) : provider_(std::move(provider)) {
   devices_[0] = std::make_unique<Device>(observer_ptr<Context>(this), 0);
