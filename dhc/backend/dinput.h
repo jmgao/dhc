@@ -22,16 +22,18 @@ struct DinputProvider : public InputProvider {
   DinputProvider();
   virtual ~DinputProvider();
 
-  virtual void Assign(observer_ptr<Device> device) override final REQUIRES(!mutex_);
-  virtual void Revoke(observer_ptr<Device> device) override final REQUIRES(!mutex_);
-  virtual void Refresh(observer_ptr<Device> device) override final REQUIRES(!mutex_);
+  virtual void Assign(observer_ptr<Device> device) override final REQUIRES(!mutex_)
+      REQUIRES(!scan_mutex_);
+  virtual void Revoke(observer_ptr<Device> device) override final REQUIRES(!mutex_)
+      REQUIRES(!scan_mutex_);
+  virtual void Refresh(observer_ptr<Device> device) override final REQUIRES(!mutex_)
+      REQUIRES(!scan_mutex_);
 
-  void Scan() REQUIRES(!mutex_);
-  bool EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> device) REQUIRES(mutex_);
+  void ScannerThread() REQUIRES(!mutex_);
+  bool EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> device) REQUIRES(!mutex_)
+      REQUIRES(!scan_mutex_);
 
  private:
-  void ScanLocked() REQUIRES(mutex_);
-
   observer_ptr<DeviceAssignment> FindAssignment(GUID real_device_guid) REQUIRES(!mutex_);
   observer_ptr<DeviceAssignment> FindAssignmentLocked(GUID real_device_guid) REQUIRES(mutex_);
 
@@ -40,15 +42,19 @@ struct DinputProvider : public InputProvider {
   observer_ptr<DeviceAssignment> FindAssignmentLocked(observer_ptr<Device> virtual_device)
       REQUIRES(mutex_);
 
-  void Refresh(observer_ptr<DeviceAssignment> assignment) REQUIRES(!mutex_);
-  void Release(observer_ptr<DeviceAssignment> assignment) REQUIRES(!mutex_);
+  void Refresh(observer_ptr<DeviceAssignment> assignment) REQUIRES(!mutex_) REQUIRES(!scan_mutex_);
+  void Release(observer_ptr<DeviceAssignment> assignment) REQUIRES(!mutex_) REQUIRES(!scan_mutex_);
 
   com_ptr<IDirectInput8A> di_;
 
  public:
   mutex mutex_;
+  mutex scan_mutex_ ACQUIRED_BEFORE(mutex_);
 
  private:
+  HANDLE scanner_thread_ = INVALID_HANDLE_VALUE;
+  std::vector<GUID> opened_device_guids_ GUARDED_BY(scan_mutex_);
+
   std::deque<observer_ptr<Device>> available_devices_ GUARDED_BY(mutex_);
   std::vector<std::unique_ptr<DeviceAssignment>> assignments_ GUARDED_BY(mutex_);
 };

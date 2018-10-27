@@ -1,5 +1,7 @@
 #include <dinput.h>
+#include <windows.h>
 
+#include <algorithm>
 #include <chrono>
 
 #include "dhc/backend/dinput.h"
@@ -10,7 +12,16 @@ using namespace std::chrono_literals;
 
 namespace dhc {
 
-DinputProvider::DinputProvider() { di_ = GetRealDirectInput8A(); }
+static WINAPI DWORD ScannerThreadTrampoline(void* self) {
+  static_cast<DinputProvider*>(self)->ScannerThread();
+  return 0;
+}
+
+DinputProvider::DinputProvider() {
+  di_ = GetRealDirectInput8A();
+  scanner_thread_ = CreateThread(nullptr, 0, ScannerThreadTrampoline, this, 0, nullptr);
+  CHECK_NE(scanner_thread_, INVALID_HANDLE_VALUE);
+}
 
 DinputProvider::~DinputProvider() {}
 
@@ -19,7 +30,6 @@ void DinputProvider::Assign(observer_ptr<Device> device) {
 
   lock_guard<mutex> lock(mutex_);
   available_devices_.push_back(device);
-  ScanLocked();
 }
 
 void DinputProvider::Revoke(observer_ptr<Device> device) { UNIMPLEMENTED(FATAL); }
@@ -31,11 +41,8 @@ void DinputProvider::Refresh(observer_ptr<Device> device) {
     // Check to make sure we're actually waiting for the device.
     auto it = std::find(available_devices_.begin(), available_devices_.end(), device);
     CHECK(it != available_devices_.end());
-    mutex_.unlock();
 
-    // Scan for new devices.
-    // TODO: Do this on another thread or something?
-    Scan();
+    mutex_.unlock();
     return;
   }
   mutex_.unlock();
@@ -74,25 +81,22 @@ observer_ptr<DeviceAssignment> DinputProvider::FindAssignmentLocked(
 
 static WINAPI BOOL EnumerateDeviceTrampoline(const DIDEVICEINSTANCEA* device, void* arg) {
   auto self = reinterpret_cast<DinputProvider*>(arg);
-  ScopedAssumeLocked<mutex> lock(self->mutex_);
   auto dev = observer_ptr<const DIDEVICEINSTANCEA>(device);
   return self->EnumerateDevice(dev) ? DIENUM_CONTINUE : DIENUM_STOP;
 }
 
-void DinputProvider::Scan() {
-  lock_guard<mutex> lock(mutex_);
-  ScanLocked();
-}
+void DinputProvider::ScannerThread() {
+  LOG(INFO) << "DinputProvider::ScannerThread started";
+  while (true) {
+    auto begin = std::chrono::high_resolution_clock::now();
+    di_->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumerateDeviceTrampoline, this, DIEDFL_ATTACHEDONLY);
+    auto end = std::chrono::high_resolution_clock::now();
+    LOG(DEBUG) << "finished scanning in " << (end - begin) / 1.0ms << "ms";
 
-void DinputProvider::ScanLocked() {
-  if (available_devices_.empty()) {
-    return;
+    // TODO: Should this use RegisterDeviceNotificationA instead?
+    Sleep(250);
   }
-
-  auto begin = std::chrono::high_resolution_clock::now();
-  di_->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumerateDeviceTrampoline, this, DIEDFL_ATTACHEDONLY);
-  auto end = std::chrono::high_resolution_clock::now();
-  LOG(INFO) << "finished scanning in " << (end - begin) / 1.0ms << "ms";
+  LOG(INFO) << "DinputProvider::ScannerThread exiting";
 }
 
 static WINAPI BOOL EnumerateObjectCallback(const DIDEVICEOBJECTINSTANCE* object, void*) {
@@ -104,11 +108,10 @@ static WINAPI BOOL EnumerateObjectCallback(const DIDEVICEOBJECTINSTANCE* object,
 }
 
 bool DinputProvider::EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> device) {
-  if (available_devices_.empty()) {
-    return true;
-  }
+  lock_guard<mutex> scan_lock(scan_mutex_);
 
-  if (FindAssignmentLocked(device->guidInstance)) {
+  if (std::find(opened_device_guids_.begin(), opened_device_guids_.end(), device->guidInstance) !=
+      opened_device_guids_.end()) {
     LOG(VERBOSE) << "skipping already-assigned device " << device->tszInstanceName;
     return true;
   }
@@ -121,6 +124,8 @@ bool DinputProvider::EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> devic
                << "): " << dierr_to_string(rc);
     return true;
   }
+
+  opened_device_guids_.push_back(device->guidInstance);
 
   rc = real_device->EnumObjects(EnumerateObjectCallback, nullptr, DIDFT_ALL);
   if (rc != DI_OK) {
@@ -144,7 +149,9 @@ bool DinputProvider::EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> devic
     return true;
   }
 
-  // TODO: We probably shouldn't be blindly assuming that this is a PS4 controller...
+  lock_guard<mutex> lock(mutex_);
+
+  // TODO: We probably shouldn't be blindly assuming that this is a PS4 controller.
   auto assignment = std::make_unique<DeviceAssignment>();
   assignment->real_device_ = std::move(real_device);
   assignment->real_device_guid_ = device->guidInstance;
@@ -227,6 +234,7 @@ void DinputProvider::Refresh(observer_ptr<DeviceAssignment> assignment) {
 }
 
 void DinputProvider::Release(observer_ptr<DeviceAssignment> assignment) {
+  lock_guard<mutex> scan_lock(scan_mutex_);
   lock_guard<mutex> lock(mutex_);
 
   assignment->real_device_->Unacquire();
@@ -235,6 +243,10 @@ void DinputProvider::Release(observer_ptr<DeviceAssignment> assignment) {
   available_devices_.push_front(vdev);
   std::sort(available_devices_.begin(), available_devices_.end(),
             [](observer_ptr<Device> lhs, observer_ptr<Device> rhs) { return lhs->id_ < rhs->id_; });
+
+  opened_device_guids_.erase(std::remove(opened_device_guids_.begin(), opened_device_guids_.end(),
+                                         assignment->real_device_guid_),
+                             opened_device_guids_.end());
 
   for (auto it = assignments_.begin(); it != assignments_.end(); ++it) {
     if (it->get() == assignment.get()) {
