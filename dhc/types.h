@@ -52,15 +52,6 @@ struct EnumMap {
   std::array<ValueType, static_cast<size_t>(Count)> data_;
 };
 
-template <typename T>
-struct SCOPED_CAPABILITY lock_guard {
-  lock_guard(T& mutex) ACQUIRE(mutex) : mutex_(mutex) { mutex_.lock(); }
-
-  ~lock_guard() RELEASE() { mutex_.unlock(); }
-
- private:
-  T& mutex_;
-};
 
 template <bool Recursive>
 struct CAPABILITY("mutex") mutex_base {
@@ -114,9 +105,21 @@ struct CAPABILITY("mutex") mutex_base {
 struct mutex : public mutex_base<false> {};
 struct recursive_mutex : public mutex_base<true> {};
 
+// This is available in libstdc++ even without winpthreads, but it doesn't have thread safety
+// annotations, so implement it again ourselves.
+template <typename T>
+struct SCOPED_CAPABILITY lock_guard {
+  lock_guard(T& mutex) ACQUIRE(mutex) : mutex_(mutex) { mutex_.lock(); }
+  ~lock_guard() RELEASE() { mutex_.unlock(); }
+
+ private:
+  T& mutex_;
+};
+
+template<typename T>
 class SCOPED_CAPABILITY ScopedAssumeLocked {
  public:
-  ScopedAssumeLocked(mutex& mutex) ACQUIRE(mutex) {}
+  ScopedAssumeLocked(T& mutex) ACQUIRE(mutex) {}
   ~ScopedAssumeLocked() RELEASE() {}
 };
 

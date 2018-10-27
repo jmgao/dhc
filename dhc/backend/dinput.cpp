@@ -17,7 +17,7 @@ DinputProvider::~DinputProvider() {}
 void DinputProvider::Assign(observer_ptr<Device> device) {
   device->provider_ = observer_ptr<InputProvider>(this);
 
-  lock_guard lock(mutex_);
+  lock_guard<mutex> lock(mutex_);
   available_devices_.push_back(device);
   ScanLocked();
 }
@@ -44,7 +44,7 @@ void DinputProvider::Refresh(observer_ptr<Device> device) {
 }
 
 observer_ptr<DeviceAssignment> DinputProvider::FindAssignment(GUID real_device_guid) {
-  lock_guard lock(mutex_);
+  lock_guard<mutex> lock(mutex_);
   return FindAssignmentLocked(real_device_guid);
 }
 
@@ -58,7 +58,7 @@ observer_ptr<DeviceAssignment> DinputProvider::FindAssignmentLocked(GUID real_de
 }
 
 observer_ptr<DeviceAssignment> DinputProvider::FindAssignment(observer_ptr<Device> virtual_device) {
-  lock_guard lock(mutex_);
+  lock_guard<mutex> lock(mutex_);
   return FindAssignmentLocked(virtual_device);
 }
 
@@ -74,7 +74,7 @@ observer_ptr<DeviceAssignment> DinputProvider::FindAssignmentLocked(
 
 static WINAPI BOOL EnumerateDeviceTrampoline(const DIDEVICEINSTANCEA* device, void* arg) {
   auto self = reinterpret_cast<DinputProvider*>(arg);
-  ScopedAssumeLocked lock(self->mutex_);
+  ScopedAssumeLocked<mutex> lock(self->mutex_);
   auto dev = observer_ptr<const DIDEVICEINSTANCEA>(device);
   return self->EnumerateDevice(dev) ? DIENUM_CONTINUE : DIENUM_STOP;
 }
@@ -232,7 +232,7 @@ void DinputProvider::Refresh(observer_ptr<DeviceAssignment> assignment) {
 }
 
 void DinputProvider::Release(observer_ptr<DeviceAssignment> assignment) {
-  lock_guard lock(mutex_);
+  lock_guard<mutex> lock(mutex_);
 
   assignment->real_device_->Unacquire();
 
