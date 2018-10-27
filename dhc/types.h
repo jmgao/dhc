@@ -131,6 +131,7 @@ struct CAPABILITY("mutex") mutex_base {
 };
 
 struct mutex : public mutex_base<false> {};
+struct recursive_mutex : public mutex_base<true> {};
 
 class SCOPED_CAPABILITY ScopedAssumeLocked {
   public:
