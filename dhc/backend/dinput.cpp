@@ -89,14 +89,9 @@ void DinputProvider::ScanLocked() {
     return;
   }
 
-  static std::optional<std::chrono::steady_clock::time_point> last_scan;
-  auto begin = std::chrono::steady_clock::now();
-  if (last_scan && (begin - *last_scan) < 1.0s) {
-    return;
-  }
+  auto begin = std::chrono::high_resolution_clock::now();
   di_->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumerateDeviceTrampoline, this, DIEDFL_ATTACHEDONLY);
-  auto end = std::chrono::steady_clock::now();
-  last_scan = end;
+  auto end = std::chrono::high_resolution_clock::now();
   LOG(INFO) << "finished scanning in " << (end - begin) / 1.0ms << "ms";
 }
 
