@@ -23,6 +23,8 @@ add_project_arguments(
   '-DWIN32_LEAN_AND_MEAN',
   '-DNOMINMAX',
 
+  # Enable some Windows cruft.
+  '-D_WIN32_WINNT=0x0600',
   language: 'cpp',
 )
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <windows.h>
+#include <synchapi.h>
 
 #include <experimental/memory>
 
@@ -105,12 +106,39 @@ struct CAPABILITY("mutex") mutex_base {
 struct mutex : public mutex_base<false> {};
 struct recursive_mutex : public mutex_base<true> {};
 
+struct CAPABILITY("mutex") shared_mutex {
+  shared_mutex() = default;
+
+  void lock() ACQUIRE() { AcquireSRWLockExclusive(&srw_lock_); }
+  bool try_lock() TRY_ACQUIRE(true) { return TryAcquireSRWLockExclusive(&srw_lock_); }
+  void unlock() RELEASE() { return ReleaseSRWLockExclusive(&srw_lock_); }
+
+  void lock_shared() ACQUIRE_SHARED() { AcquireSRWLockExclusive(&srw_lock_); }
+  bool try_lock_shared() TRY_ACQUIRE_SHARED(true) { return TryAcquireSRWLockExclusive(&srw_lock_); }
+  void unlock_shared() RELEASE_SHARED() { return ReleaseSRWLockShared(&srw_lock_); }
+
+  // Provide an overload for operator! to support negative thread-safety annotations.
+
+  const shared_mutex& operator!() const;
+ private:
+  SRWLOCK srw_lock_ = SRWLOCK_INIT;
+};
+
 // This is available in libstdc++ even without winpthreads, but it doesn't have thread safety
 // annotations, so implement it again ourselves.
 template <typename T>
 struct SCOPED_CAPABILITY lock_guard {
   lock_guard(T& mutex) ACQUIRE(mutex) : mutex_(mutex) { mutex_.lock(); }
   ~lock_guard() RELEASE() { mutex_.unlock(); }
+
+ private:
+  T& mutex_;
+};
+
+template <typename T>
+struct SCOPED_CAPABILITY shared_lock_guard {
+  shared_lock_guard(T& mutex) ACQUIRE_SHARED(mutex) : mutex_(mutex) { mutex_.lock_shared(); }
+  ~shared_lock_guard() RELEASE_SHARED() { mutex_.unlock_shared(); }
 
  private:
   T& mutex_;
