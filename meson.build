@@ -8,6 +8,14 @@ project(
   ],
 )
 
+if target_machine.cpu_family() == 'x86'
+  dist_dir = join_paths(meson.current_source_dir(), 'dist', 'i686')
+elif target_machine.cpu_family() == 'x86_64'
+  dist_dir = join_paths(meson.current_source_dir(), 'dist', 'x86_64')
+else
+  error('Unknown target CPU "' + target_machine.cpu_family() + '"')
+endif
+
 add_project_arguments(
   '-Wall',
   '-Wextra',
@@ -52,7 +60,7 @@ dhc = shared_library(
   link_args: '-ldinput8',
 
   install: true,
-  install_dir: join_paths(meson.current_build_dir(), 'dist'),
+  install_dir: dist_dir
 )
 
 dinput8 = shared_library(
@@ -63,7 +71,7 @@ dinput8 = shared_library(
   vs_module_defs: 'dinput8/dinput8.def',
 
   install: true,
-  install_dir: join_paths(meson.current_build_dir(), 'dist'),
+  install_dir: dist_dir
 )
 
 xinput1_3 = shared_library(
@@ -74,16 +82,13 @@ xinput1_3 = shared_library(
   vs_module_defs: 'xinput1_3/xinput1_3.def',
 
   install: true,
-  install_dir: join_paths(meson.current_build_dir(), 'dist'),
+  install_dir: dist_dir
 )
 
 dhc_test = executable(
   'dhc_test',
   link_with: [dhc],
   sources: ['test/dhc_test.cpp'],
-
-  install: true,
-  install_dir: join_paths(meson.current_build_dir(), 'dist'),
 )
 
 dinput_test = executable(
@@ -91,7 +96,4 @@ dinput_test = executable(
   link_with: [dhc],
   sources: ['test/dinput_test.cpp'],
   link_args: ['-ldinput8', '-ldxguid'],
-
-  install: true,
-  install_dir: join_paths(meson.current_build_dir(), 'dist'),
 )
