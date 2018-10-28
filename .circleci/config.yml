@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: jmgao/debian-buster-mingw-w64:20181024
+      - image: jmgao/debian-buster-mingw-w64:20181027
     steps:
       - checkout
       - run:

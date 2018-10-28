@@ -36,6 +36,14 @@ add_project_arguments(
   language: 'cpp',
 )
 
+if meson.get_compiler('cpp').get_id() == 'clang'
+  add_global_arguments(
+    '-Wthread-safety',
+    '-Wthread-safety-negative',
+    language: 'cpp'
+  )
+endif
+
 add_project_link_arguments(
   '-Wl,--enable-stdcall-fixup',
   '-static-libgcc',
