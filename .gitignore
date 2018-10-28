@@ -260,5 +260,6 @@ paket-files/
 __pycache__/
 *.pyc
 
-cross/build.32/
-cross/build.64/
+build/i686/
+build/x86_64/
+dist/
