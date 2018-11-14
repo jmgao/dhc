@@ -96,7 +96,7 @@ jobs:
           at: /tmp/dhc
       - run:
           name: Create ZIP archive
-          command: zip -r -9 /tmp/dhc.zip /tmp/dhc && mv /tmp/dhc.zip /tmp/dhc
+          command: cd /tmp; zip -r -9 dhc.zip dhc && mv dhc.zip /tmp/dhc
       - store_artifacts:
           path: /tmp/dhc
           destination: dhc/
