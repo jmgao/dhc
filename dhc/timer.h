@@ -14,7 +14,7 @@ struct Timer {
     using namespace std::chrono_literals;
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = end - begin_;
-    auto error_level = logging::DEBUG;
+    auto error_level = logging::VERBOSE;
     if (duration > 1ms) {
       error_level = logging::ERROR;
     }

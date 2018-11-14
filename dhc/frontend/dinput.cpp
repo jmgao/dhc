@@ -270,7 +270,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
       obj.dwFlags = object.flags;
       tstrncpy(obj.tszName, object.name, MAX_PATH);
 
-      LOG(INFO) << "Enumerating object " << obj.tszName << ": " << didft_to_string(obj.dwType);
+      LOG(VERBOSE) << "Enumerating object " << obj.tszName << ": " << didft_to_string(obj.dwType);
 
       if (callback(&obj, callback_arg) != DIENUM_CONTINUE) {
         return DI_OK;
@@ -320,11 +320,11 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
                           const DIPROPHEADER* prop_header) {
     switch (prop_header->dwHow) {
       case DIPH_DEVICE:
-        LOG(INFO) << "FindPropertyObject(DIPH_DEVICE)";
+        LOG(DEBUG) << "FindPropertyObject(DIPH_DEVICE)";
         return true;
 
       case DIPH_BYOFFSET:
-        LOG(INFO) << "FindPropertyObject(DIPH_BYOFFSET(" << prop_header->dwObj << ")";
+        LOG(DEBUG) << "FindPropertyObject(DIPH_BYOFFSET(" << prop_header->dwObj << ")";
         for (const auto& format : device_formats_) {
           if (format.offset == prop_header->dwObj) {
             *out_object = format.object;
@@ -338,7 +338,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
         return false;
 
       case DIPH_BYID:
-        LOG(INFO) << "FindPropertyObject(DIPH_BYID(" << didft_to_string(prop_header->dwObj) << "))";
+        LOG(DEBUG) << "FindPropertyObject(DIPH_BYID(" << didft_to_string(prop_header->dwObj)
+                   << "))";
         for (auto& object : objects_) {
           if (object.MatchesType(prop_header->dwObj)) {
             *out_object = observer_ptr<EmulatedDeviceObject>(&object);
@@ -369,8 +370,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
       return DIERR_OBJECTNOTFOUND;
     }
 
-    LOG(INFO) << "EmulatedDirectInput8Device::SetProperty(" << GetDIPropName(guid) << ", "
-              << object->name << ")";
+    LOG(DEBUG) << "EmulatedDirectInput8Device::SetProperty(" << GetDIPropName(guid) << ", "
+               << object->name << ")";
 
     // These aren't equivalent to `guid == DIPROP_FOO`, because fuck you, that's why.
     if (&guid == &DIPROP_DEADZONE || &guid == &DIPROP_SATURATION) {
@@ -382,16 +383,16 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
         return DIERR_INVALIDPARAM;
       }
       if (&guid == &DIPROP_DEADZONE) {
-        LOG(INFO) << "Setting dead zone for axis " << object->name << " to " << value;
+        LOG(DEBUG) << "Setting dead zone for axis " << object->name << " to " << value;
         object->deadzone = value / 10000.0;
       } else if (&guid == &DIPROP_SATURATION) {
-        LOG(INFO) << "Setting saturation for axis " << object->name << " to " << value;
+        LOG(DEBUG) << "Setting saturation for axis " << object->name << " to " << value;
         object->saturation = value / 10000.0;
       }
       return DI_OK;
     } else if (&guid == &DIPROP_RANGE) {
       if (!(object->type & DIDFT_AXIS)) {
-        LOG(ERROR) << "type isn't axis";
+        LOG(ERROR) << "attempted to set DIPROP_RANGE on non-axis";
         return DIERR_INVALIDPARAM;
       }
 
@@ -402,8 +403,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
       const DIPROPRANGE* range = reinterpret_cast<const DIPROPRANGE*>(prop_header);
       // TODO: Should we check that max > min?
-      LOG(INFO) << "Setting range for axis " << object->name << " to [" << range->lMin << ", "
-                << range->lMax << "]";
+      LOG(DEBUG) << "Setting range for axis " << object->name << " to [" << range->lMin << ", "
+                 << range->lMax << "]";
       std::tie(object->range_min, object->range_max) = std::tie(range->lMin, range->lMax);
       return DI_OK;
     }
@@ -423,7 +424,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
   virtual HRESULT STDMETHODCALLTYPE GetDeviceState(DWORD size, void* buffer) override final {
-    LOG(DEBUG) << "EmulatedDirectInput8Device::GetDeviceState(" << size << ")";
+    LOG(VERBOSE) << "EmulatedDirectInput8Device::GetDeviceState(" << size << ")";
     TIMER();
     memset(buffer, 0, size);
     for (const auto& fmt : device_formats_) {
@@ -465,15 +466,15 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
     for (size_t i = 0; i < data_format->dwNumObjs; ++i) {
       DIOBJECTDATAFORMAT* object_data_format = &data_format->rgodf[i];
-      LOG(INFO) << "DIObjectDataFormat " << i;
+      LOG(VERBOSE) << "DIObjectDataFormat " << i;
       if (object_data_format->pguid) {
-        LOG(INFO) << " GUID = " << to_string(*object_data_format->pguid);
+        LOG(VERBOSE) << " GUID = " << to_string(*object_data_format->pguid);
       } else {
-        LOG(INFO) << " GUID = <none>";
+        LOG(VERBOSE) << " GUID = <none>";
       }
-      LOG(INFO) << "  offset = " << object_data_format->dwOfs;
-      LOG(INFO) << "  type = " << didft_to_string(object_data_format->dwType);
-      LOG(INFO) << "  flags = " << didoi_to_string(object_data_format->dwFlags);
+      LOG(VERBOSE) << "  offset = " << object_data_format->dwOfs;
+      LOG(VERBOSE) << "  type = " << didft_to_string(object_data_format->dwType);
+      LOG(VERBOSE) << "  flags = " << didoi_to_string(object_data_format->dwFlags);
 
       bool matched = false;
       for (auto& object : objects_) {
@@ -492,7 +493,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
         if (object_data_format->pguid && *object_data_format->pguid != object.guid) {
           continue;
         }
-        LOG(INFO) << "  matched object format to " << object.name;
+        LOG(VERBOSE) << "  matched object format to " << object.name;
         matched = true;
         object.matched = true;
         device_formats_.push_back({.object = observer_ptr<EmulatedDeviceObject>(&object),
@@ -505,14 +506,14 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
           if (object_data_format->pguid && *object_data_format->pguid == GUID_POV) {
             device_format_defaults_.push_back({.offset = object_data_format->dwOfs, .value = -1UL});
           }
-          LOG(INFO) << "failed to match optional object";
+          LOG(VERBOSE) << "failed to match optional object";
         } else {
           LOG(ERROR) << "failed to match required object";
           return DIERR_OBJECTNOTFOUND;
         }
       }
     }
-    LOG(INFO) << "SetDataFormat done";
+    LOG(VERBOSE) << "SetDataFormat done";
     return DI_OK;
   }
 
@@ -610,7 +611,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
   virtual HRESULT STDMETHODCALLTYPE Poll() override final {
-    LOG(DEBUG) << "EmulatedDirectInput8Device::Poll()";
+    LOG(VERBOSE) << "EmulatedDirectInput8Device::Poll()";
     TIMER();
     vdev_->Update();
     return DI_OK;

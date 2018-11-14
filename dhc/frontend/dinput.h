@@ -110,15 +110,15 @@ struct EmulatedDeviceObject {
 
     DWORD type_mask = DIDFT_GETTYPE(didft);
     if ((type_mask & type) == 0) {
-      LOG(INFO) << name << " type mismatch";
+      LOG(VERBOSE) << name << " type mismatch";
       return false;
     }
     didft &= ~type_mask;
 
     if ((didft & DIDFT_INSTANCEMASK) != DIDFT_ANYINSTANCE &&
         DIDFT_GETINSTANCE(didft) != instance_id) {
-      LOG(INFO) << name << " instance mismatch (want = " << DIDFT_GETINSTANCE(didft)
-                << ", self = " << instance_id << ")";
+      LOG(VERBOSE) << name << " instance mismatch (want = " << DIDFT_GETINSTANCE(didft)
+                   << ", self = " << instance_id << ")";
       return false;
     }
     didft &= ~DIDFT_INSTANCEMASK;
@@ -126,7 +126,7 @@ struct EmulatedDeviceObject {
     didft &= ~DIDFT_OPTIONAL;
 
     if (didft != 0) {
-      LOG(INFO) << "leftover flags: " << didft_to_string(didft);
+      LOG(DEBUG) << "leftover flags: " << didft_to_string(didft);
       return false;
     }
 

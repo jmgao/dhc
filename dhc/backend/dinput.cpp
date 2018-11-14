@@ -116,10 +116,10 @@ static WINAPI BOOL EnumerateObjectCallback(const DIDEVICEOBJECTINSTANCE* object,
     ++counts->pov_hats;
   }
 
-  LOG(INFO) << "Object " << object->tszName;
-  LOG(INFO) << "  GUID: " << to_string(object->guidType);
-  LOG(INFO) << "  Type: " << didft_to_string(object->dwType);
-  LOG(INFO) << "  Flags: " << didoi_to_string(object->dwFlags);
+  LOG(DEBUG) << "Object " << object->tszName;
+  LOG(DEBUG) << "  GUID: " << to_string(object->guidType);
+  LOG(DEBUG) << "  Type: " << didft_to_string(object->dwType);
+  LOG(DEBUG) << "  Flags: " << didoi_to_string(object->dwFlags);
   return true;
 }
 
@@ -146,13 +146,13 @@ bool DinputProvider::EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> devic
 
   if (std::find(opened_device_guids_.begin(), opened_device_guids_.end(), device->guidInstance) !=
       opened_device_guids_.end()) {
-    LOG(VERBOSE) << "skipping already-assigned device " << device->tszInstanceName;
+    LOG(DEBUG) << "skipping already-assigned device " << device->tszInstanceName;
     return true;
   }
 
   if (LOBYTE(device->dwDevType) == DI8DEVTYPE_SUPPLEMENTAL) {
-    LOG(VERBOSE) << "skipping supplemental device " << device->tszInstanceName << " ("
-              << to_string(device->guidInstance) << ")";
+    LOG(DEBUG) << "skipping supplemental device " << device->tszInstanceName << " ("
+               << to_string(device->guidInstance) << ")";
     return true;
   }
 
