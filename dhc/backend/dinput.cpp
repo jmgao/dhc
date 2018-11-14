@@ -131,7 +131,15 @@ bool DinputProvider::EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> devic
     return true;
   }
 
-  // TODO: Check to make sure this is actually a suitable device?
+  if (LOBYTE(device->dwDevType) == DI8DEVTYPE_SUPPLEMENTAL) {
+    LOG(VERBOSE) << "skipping supplemental device " << device->tszInstanceName << " ("
+              << to_string(device->guidInstance) << ")";
+    return true;
+  }
+
+  LOG(INFO) << "Enumerating device " << device->tszInstanceName << " ("
+            << to_string(device->guidInstance) << ")";
+
   com_ptr<IDirectInputDevice8A> real_device;
   HRESULT rc = di_->CreateDevice(device->guidInstance, real_device.receive(), nullptr);
   if (rc != DI_OK) {
