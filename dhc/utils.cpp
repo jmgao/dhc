@@ -40,15 +40,13 @@ std::string to_string(const std::string& str) {
 }
 
 std::string to_string(const std::wstring& wstr) {
-  using convert_type = std::codecvt_utf8<wchar_t>;
-  std::wstring_convert<convert_type, wchar_t> converter;
+  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> converter;
   return converter.to_bytes(wstr);
 }
 
 std::wstring to_wstring(const std::string& str) {
-  using convert_type = std::codecvt_utf8<wchar_t>;
-  std::wstring_convert<convert_type, wchar_t> converter;
-  return converter.from_bytes(str);
+  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> converter;
+  return converter.from_bytes(str.data());
 }
 
 std::wstring to_wstring(const std::wstring& wstr) {
