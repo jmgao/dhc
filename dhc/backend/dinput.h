@@ -15,6 +15,7 @@ struct DeviceAssignment {
   observer_ptr<Device> virtual_device_;
   com_ptr<IDirectInputDevice8A> real_device_;
   GUID real_device_guid_;
+  std::string real_device_name_;
   observer_ptr<DinputProvider> provider_;
 };
 
@@ -32,6 +33,8 @@ struct DinputProvider : public InputProvider {
   void ScannerThread() REQUIRES(!mutex_);
   bool EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> device) REQUIRES(!mutex_)
       REQUIRES(!scan_mutex_);
+
+  void AssignDevices() REQUIRES(mutex_);
 
  private:
   observer_ptr<DeviceAssignment> FindAssignment(GUID real_device_guid) REQUIRES(!mutex_);
@@ -55,7 +58,8 @@ struct DinputProvider : public InputProvider {
   HANDLE scanner_thread_ = INVALID_HANDLE_VALUE;
   std::vector<GUID> opened_device_guids_ GUARDED_BY(scan_mutex_);
 
-  std::deque<observer_ptr<Device>> available_devices_ GUARDED_BY(mutex_);
+  std::deque<observer_ptr<Device>> available_virtual_devices_ GUARDED_BY(mutex_);
+  std::deque<std::unique_ptr<DeviceAssignment>> available_physical_devices_ GUARDED_BY(mutex_);
   std::vector<std::unique_ptr<DeviceAssignment>> assignments_ GUARDED_BY(mutex_);
 };
 

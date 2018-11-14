@@ -29,7 +29,7 @@ void DinputProvider::Assign(observer_ptr<Device> device) {
   device->provider_ = observer_ptr<InputProvider>(this);
 
   lock_guard<mutex> lock(mutex_);
-  available_devices_.push_back(device);
+  available_virtual_devices_.push_back(device);
 }
 
 void DinputProvider::Revoke(observer_ptr<Device> device) { UNIMPLEMENTED(FATAL); }
@@ -39,8 +39,9 @@ void DinputProvider::Refresh(observer_ptr<Device> device) {
   auto assignment = FindAssignmentLocked(device);
   if (!assignment) {
     // Check to make sure we're actually waiting for the device.
-    auto it = std::find(available_devices_.begin(), available_devices_.end(), device);
-    CHECK(it != available_devices_.end());
+    auto it =
+        std::find(available_virtual_devices_.begin(), available_virtual_devices_.end(), device);
+    CHECK(it != available_virtual_devices_.end());
 
     mutex_.unlock();
     return;
@@ -122,6 +123,24 @@ static WINAPI BOOL EnumerateObjectCallback(const DIDEVICEOBJECTINSTANCE* object,
   return true;
 }
 
+void DinputProvider::AssignDevices() {
+  while (!available_virtual_devices_.empty()) {
+    if (available_physical_devices_.empty()) {
+      return;
+    }
+
+    std::unique_ptr<DeviceAssignment> assignment = std::move(available_physical_devices_.front());
+    available_physical_devices_.pop_front();
+
+    assignment->virtual_device_ = available_virtual_devices_.front();
+    available_virtual_devices_.pop_front();
+
+    LOG(INFO) << "Assigning device " << assignment->virtual_device_->id_ << " to "
+              << assignment->real_device_name_;
+    assignments_.emplace_back(std::move(assignment));
+  }
+}
+
 bool DinputProvider::EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> device) {
   lock_guard<mutex> scan_lock(scan_mutex_);
 
@@ -188,18 +207,14 @@ bool DinputProvider::EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> devic
   }
 
   lock_guard<mutex> lock(mutex_);
-
-  // TODO: We probably shouldn't be blindly assuming that this is a PS4 controller.
   auto assignment = std::make_unique<DeviceAssignment>();
   assignment->real_device_ = std::move(real_device);
   assignment->real_device_guid_ = device->guidInstance;
-  assignment->virtual_device_ = available_devices_.front();
+  assignment->real_device_name_ = device->tszInstanceName;
   assignment->provider_ = observer_ptr<DinputProvider>(this);
-  available_devices_.pop_front();
+  available_physical_devices_.push_back(std::move(assignment));
 
-  LOG(INFO) << "assigning device " << assignment->virtual_device_->id_ << " to "
-            << device->tszInstanceName;
-  assignments_.push_back(std::move(assignment));
+  AssignDevices();
   return true;
 }
 
@@ -278,8 +293,8 @@ void DinputProvider::Release(observer_ptr<DeviceAssignment> assignment) {
   assignment->real_device_->Unacquire();
 
   auto vdev = assignment->virtual_device_;
-  available_devices_.push_front(vdev);
-  std::sort(available_devices_.begin(), available_devices_.end(),
+  available_virtual_devices_.push_front(vdev);
+  std::sort(available_virtual_devices_.begin(), available_virtual_devices_.end(),
             [](observer_ptr<Device> lhs, observer_ptr<Device> rhs) { return lhs->id_ < rhs->id_; });
 
   opened_device_guids_.erase(std::remove(opened_device_guids_.begin(), opened_device_guids_.end(),
@@ -294,6 +309,7 @@ void DinputProvider::Release(observer_ptr<DeviceAssignment> assignment) {
   }
 
   vdev->Reset();
+  AssignDevices();
 }
 
 }  // namespace dhc
