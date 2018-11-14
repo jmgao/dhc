@@ -99,7 +99,22 @@ void DinputProvider::ScannerThread() {
   LOG(INFO) << "DinputProvider::ScannerThread exiting";
 }
 
-static WINAPI BOOL EnumerateObjectCallback(const DIDEVICEOBJECTINSTANCE* object, void*) {
+struct DeviceObjectCounts {
+  size_t axes = 0;
+  size_t buttons = 0;
+  size_t pov_hats = 0;
+};
+
+static WINAPI BOOL EnumerateObjectCallback(const DIDEVICEOBJECTINSTANCE* object, void* arg) {
+  auto* counts = static_cast<DeviceObjectCounts*>(arg);
+  if ((object->dwType & DIDFT_AXIS)) {
+    ++counts->axes;
+  } else if ((object->dwType & DIDFT_BUTTON)) {
+    ++counts->buttons;
+  } else if ((object->dwType & DIDFT_POV)) {
+    ++counts->pov_hats;
+  }
+
   LOG(INFO) << "Object " << object->tszName;
   LOG(INFO) << "  GUID: " << to_string(object->guidType);
   LOG(INFO) << "  Type: " << didft_to_string(object->dwType);
@@ -126,12 +141,27 @@ bool DinputProvider::EnumerateDevice(observer_ptr<const DIDEVICEINSTANCEA> devic
   }
 
   opened_device_guids_.push_back(device->guidInstance);
-
-  rc = real_device->EnumObjects(EnumerateObjectCallback, nullptr, DIDFT_ALL);
+  DeviceObjectCounts counts;
+  rc = real_device->EnumObjects(EnumerateObjectCallback, &counts, DIDFT_ALL);
   if (rc != DI_OK) {
     LOG(ERROR) << "failed to EnumObjects on device " << device->tszInstanceName << ": "
                << dierr_to_string(rc);
     return true;
+  }
+
+  if (counts.axes == 6 && counts.buttons == 14 && counts.pov_hats == 1) {
+    LOG(INFO) << "Enumerated " << device->tszInstanceName << " objects: PS4 controller";
+  } else if (counts.axes == 4 && counts.buttons == 13 && counts.pov_hats == 1) {
+    LOG(INFO) << "Enumerated " << device->tszInstanceName << " objects: PS3 controller";
+  } else {
+    LOG(INFO) << "Enumerated " << device->tszInstanceName << " objects: unknown";
+    LOG(INFO) << "  Axes: " << counts.axes;
+    LOG(INFO) << "  Buttons: " << counts.buttons;
+    LOG(INFO) << "  POV Hats: " << counts.pov_hats;
+    if (counts.axes == 0 && counts.buttons == 0 && counts.pov_hats == 0) {
+      LOG(INFO) << "Skipping empty device...";
+      return true;
+    }
   }
 
   // TODO: Should we create our own DIDATAFORMAT?
