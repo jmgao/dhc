@@ -12,7 +12,7 @@ log = "0.4.6"
 pretty_env_logger = "0.2.5"
 
 lazy_static = "1.2.0"
-parking_lot = { version = "0.7", features = ["nightly"]  }
+parking_lot = { version = "0.7" }
 triple_buffer = "4.0.1"
 twoway = "0.2.0"
 

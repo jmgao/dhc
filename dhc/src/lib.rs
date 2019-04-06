@@ -1,5 +1,3 @@
-#![feature(duration_float)]
-
 #[macro_use]
 extern crate log;
 extern crate pretty_env_logger;
@@ -189,7 +187,6 @@ impl Context {
 
   pub fn update(&self) {
     trace!("Context::update()");
-    let start = std::time::Instant::now();
     let mut state = self.state.write().unwrap();
 
     // Check for new devices.
@@ -207,8 +204,5 @@ impl Context {
     }
 
     state.update();
-
-    let elapsed_ms = start.elapsed().as_secs_f64() * 1000.0;
-    trace!("Context::update() finished in {:0.3}ms", elapsed_ms);
   }
 }
