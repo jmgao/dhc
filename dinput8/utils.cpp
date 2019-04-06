@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <dinput.h>
 
-#include "dhc/utils.h"
+#include "utils.h"
 
 #include <codecvt>
 #include <deque>
@@ -10,6 +10,8 @@
 
 #include "dhc/dhc.h"
 #include "dhc/logging.h"
+
+#include "dhc_dinput.h"
 
 using namespace std::string_literals;
 

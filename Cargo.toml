@@ -1,0 +1,11 @@
+[workspace]
+members = [
+  "dhc",
+]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+lto = true
+panic = "abort"

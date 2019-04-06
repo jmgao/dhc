@@ -1,0 +1,19 @@
+include_guard = "DHC_H"
+include_version = true
+
+line_length = 100
+tab_width = 2
+language = "C++"
+documentation_style = "C++"
+
+
+[defines]
+# A rule for generating `#ifdef`s for matching `#[cfg]`ed items,
+# e.g. `#[cfg(foo = "bar")] ...` -> `#if defined(FOO_IS_BAR) ... #endif`
+"foo = bar" = "FOO_IS_BAR"
+
+[parse]
+parse_deps = false
+
+[export]
+item_types = ["globals", "enums", "structs", "unions", "typedefs", "opaque", "functions"]

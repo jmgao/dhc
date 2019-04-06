@@ -3,17 +3,34 @@
 #include <dinput.h>
 
 #include <variant>
+#include <vector>
 
 #include "dhc/dhc.h"
 #include "dhc/logging.h"
-#include "dhc/utils.h"
+
+#include "utils.h"
 
 namespace dhc {
 
-DHC_API FARPROC WINAPI GetDirectInput8Proc(const char* proc_name);
+constexpr GUID GUID_DHC_P1 = {
+  0xdead571c,
+  0x4efc,
+  0x9fa7,
+  {
+    0x9a, 0x7e, 0x8d, 0x10,
+    0x00, 0x00, 0x00, 0x01
+  }
+};
 
-DHC_API IDirectInput8W* GetEmulatedDirectInput8W();
-DHC_API IDirectInput8A* GetEmulatedDirectInput8A();
+constexpr GUID GUID_DHC_P2 = {
+  0xdead571c,
+  0x4efc,
+  0x9fa7,
+  {
+    0x9a, 0x7e, 0x8d, 0x10,
+    0x00, 0x00, 0x00, 0x02
+  }
+};
 
 template <typename T>
 struct DI8Types;
@@ -91,7 +108,7 @@ struct EmulatedDeviceObject {
   size_t offset;
 
   // Backend object that this object maps to, or std::monostate if it's unmapped.
-  std::variant<std::monostate, AxisType, ButtonType, PovType> mapped_object;
+  std::variant<std::monostate, AxisType, ButtonType, HatType> mapped_object;
 
   // Properties set by SetProperty:
   long range_min = 0;
@@ -148,7 +165,7 @@ struct DeviceFormat {
   size_t offset;
 
   void Apply(char* output_buffer, size_t output_buffer_length,
-             observer_ptr<Device> virtual_device) const;
+             DeviceInputs inputs) const;
 };
 
 // Some fields (e.g. POV hats) need to be set to non-zero values if not found.

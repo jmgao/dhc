@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "dhc/frontend/dinput.h"
+#include "dhc_dinput.h"
 
 namespace dhc {
 
@@ -15,28 +15,28 @@ std::vector<EmulatedDeviceObject> GeneratePS4EmulatedDeviceObjects() {
                     .flags = DIDOI_ASPECTPOSITION,
                     .instance_id = 0,
                     .offset = 12,
-                    .mapped_object = AxisType::LStickX});
+                    .mapped_object = AxisType::LeftStickX});
   result.push_back({.name = "Y Axis",
                     .guid = GUID_YAxis,
                     .type = DIDFT_ABSAXIS,
                     .flags = DIDOI_ASPECTPOSITION,
                     .instance_id = 1,
                     .offset = 8,
-                    .mapped_object = AxisType::LStickY});
+                    .mapped_object = AxisType::LeftStickY});
   result.push_back({.name = "Z Axis",
                     .guid = GUID_ZAxis,
                     .type = DIDFT_ABSAXIS,
                     .flags = DIDOI_ASPECTPOSITION,
                     .instance_id = 2,
                     .offset = 4,
-                    .mapped_object = AxisType::RStickX});
+                    .mapped_object = AxisType::RightStickX});
   result.push_back({.name = "Z Rotation",
                     .guid = GUID_RzAxis,
                     .type = DIDFT_ABSAXIS,
                     .flags = DIDOI_ASPECTPOSITION,
                     .instance_id = 5,
                     .offset = 0,
-                    .mapped_object = AxisType::RStickY});
+                    .mapped_object = AxisType::RightStickY});
 
 #if defined(ENABLE_TRIGGERS)
   result.push_back({.name = "X Rotation",
@@ -45,14 +45,14 @@ std::vector<EmulatedDeviceObject> GeneratePS4EmulatedDeviceObjects() {
                     .flags = DIDOI_ASPECTPOSITION,
                     .instance_id = 3,
                     .offset = 28,
-                    .mapped_object = AxisType::LTrigger});
+                    .mapped_object = AxisType::LeftTrigger});
   result.push_back({.name = "Y Rotation",
                     .guid = GUID_RyAxis,
                     .type = DIDFT_ABSAXIS,
                     .flags = DIDOI_ASPECTPOSITION,
                     .instance_id = 4,
                     .offset = 24,
-                    .mapped_object = AxisType::RTrigger});
+                    .mapped_object = AxisType::RightTrigger});
 #endif
 
   // Buttons
@@ -62,28 +62,28 @@ std::vector<EmulatedDeviceObject> GeneratePS4EmulatedDeviceObjects() {
                     .flags = 0,
                     .instance_id = 0,
                     .offset = 220,
-                    .mapped_object = ButtonType::Square});
+                    .mapped_object = ButtonType::West});
   result.push_back({.name = "Button 1",
                     .guid = GUID_Button,
                     .type = DIDFT_PSHBUTTON,
                     .flags = 0,
                     .instance_id = 1,
                     .offset = 221,
-                    .mapped_object = ButtonType::Cross});
+                    .mapped_object = ButtonType::South});
   result.push_back({.name = "Button 2",
                     .guid = GUID_Button,
                     .type = DIDFT_PSHBUTTON,
                     .flags = 0,
                     .instance_id = 2,
                     .offset = 222,
-                    .mapped_object = ButtonType::Circle});
+                    .mapped_object = ButtonType::East});
   result.push_back({.name = "Button 3",
                     .guid = GUID_Button,
                     .type = DIDFT_PSHBUTTON,
                     .flags = 0,
                     .instance_id = 3,
                     .offset = 223,
-                    .mapped_object = ButtonType::Triangle});
+                    .mapped_object = ButtonType::North});
   result.push_back({.name = "Button 4",
                     .guid = GUID_Button,
                     .type = DIDFT_PSHBUTTON,
@@ -118,14 +118,14 @@ std::vector<EmulatedDeviceObject> GeneratePS4EmulatedDeviceObjects() {
                     .flags = 0,
                     .instance_id = 8,
                     .offset = 228,
-                    .mapped_object = ButtonType::Share});
+                    .mapped_object = ButtonType::Select});
   result.push_back({.name = "Button 9",
                     .guid = GUID_Button,
                     .type = DIDFT_PSHBUTTON,
                     .flags = 0,
                     .instance_id = 9,
                     .offset = 229,
-                    .mapped_object = ButtonType::Options});
+                    .mapped_object = ButtonType::Start});
   result.push_back({.name = "Button 10",
                     .guid = GUID_Button,
                     .type = DIDFT_PSHBUTTON,
@@ -146,7 +146,7 @@ std::vector<EmulatedDeviceObject> GeneratePS4EmulatedDeviceObjects() {
                     .flags = 0,
                     .instance_id = 12,
                     .offset = 232,
-                    .mapped_object = ButtonType::PlayStation});
+                    .mapped_object = ButtonType::Home});
   result.push_back({.name = "Button 13",
                     .guid = GUID_Button,
                     .type = DIDFT_PSHBUTTON,
@@ -162,7 +162,7 @@ std::vector<EmulatedDeviceObject> GeneratePS4EmulatedDeviceObjects() {
                     .flags = 0,
                     .instance_id = 0,
                     .offset = 16,
-                    .mapped_object = PovType::DPad});
+                    .mapped_object = HatType::DPad});
 
   return result;
 }

@@ -9,12 +9,16 @@
 #include <string>
 #include <string_view>
 
+#include <experimental/memory>
+
 #include "dhc/dhc.h"
 
 namespace dhc {
 
-DHC_API HMODULE LoadSystemLibrary(const std::wstring& name);
-DHC_API FARPROC WINAPI GetDirectInput8Proc(const char* proc_name);
+using std::experimental::observer_ptr;
+
+HMODULE LoadSystemLibrary(const std::wstring& name);
+FARPROC WINAPI GetDirectInput8Proc(const char* proc_name);
 
 inline double lerp(double value, double min, double max) { return min + value * (max - min); }
 
@@ -37,11 +41,11 @@ std::string didft_to_string(DWORD type);
 std::string to_string(REFGUID guid);
 
 // Unicode helpers.
-DHC_API std::string to_string(const std::string& str);
-DHC_API std::string to_string(const std::wstring& wstr);
+std::string to_string(const std::string& str);
+std::string to_string(const std::wstring& wstr);
 
-DHC_API std::wstring to_wstring(const std::string& str);
-DHC_API std::wstring to_wstring(const std::wstring& wstr);
+std::wstring to_wstring(const std::string& str);
+std::wstring to_wstring(const std::wstring& wstr);
 
 inline wchar_t* tstrncpy(wchar_t* dst, const char* src, size_t len) {
   std::wstring wstr = to_wstring(src);
@@ -57,7 +61,7 @@ inline char* tstrncpy(char* dst, const char* src, size_t len) {
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 #define HINST_SELF ((HINSTANCE)&__ImageBase)
 
-DHC_API std::string_view dierr_to_string(HRESULT result);
+std::string_view dierr_to_string(HRESULT result);
 
 // COM junk.
 template <typename T>
@@ -155,7 +159,7 @@ struct com_ptr {
   T* ptr_ = nullptr;
 };
 
-DHC_API com_ptr<IDirectInput8A> GetRealDirectInput8A();
-DHC_API com_ptr<IDirectInput8W> GetRealDirectInput8W();
+com_ptr<IDirectInput8A> GetRealDirectInput8A();
+com_ptr<IDirectInput8W> GetRealDirectInput8W();
 
 }  // namespace dhc

@@ -1,0 +1,27 @@
+[package]
+name = "dhc"
+version = "0.1.0"
+authors = ["Josh Gao <josh@insolit.us>"]
+edition = "2018"
+
+[build-dependencies]
+cbindgen = "0.8.3"
+
+[dependencies]
+log = "0.4.6"
+pretty_env_logger = "0.2.5"
+
+lazy_static = "1.2.0"
+parking_lot = { version = "0.7", features = ["nightly"]  }
+triple_buffer = "4.0.1"
+twoway = "0.2.0"
+
+winapi = { version = "0.3", features = ["winuser", "handleapi", "hidpi", "hidsdi"] }
+hwndloop = "0.1.5"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[[bin]]
+name = "dhc"
+path = "src/bin.rs"

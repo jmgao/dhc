@@ -2,7 +2,6 @@ project(
   'dhc',
   'cpp',
   default_options: [
-    'cpp_std=c++1z',
     'strip=true',
     'buildtype=minsize',
   ],
@@ -20,6 +19,8 @@ add_project_arguments(
   '-Wall',
   '-Wextra',
   '-Werror',
+
+  '-std=c++17',
 
   # Ignore some annoying useless warnings.
   '-Wno-unused-parameter',
@@ -52,56 +53,49 @@ add_project_link_arguments(
   language: 'cpp',
 )
 
-dhc = shared_library(
-  'dhc',
-  name_prefix: '',
-  sources: [
-    'dhc/dhc.cpp',
-    'dhc/backend/dinput.cpp',
-    'dhc/frontend/dinput.cpp',
-    'dhc/frontend/ps4.cpp',
-    'dhc/frontend/xinput.cpp',
-    'dhc/logging.cpp',
-    'dhc/utils.cpp',
-  ],
-  cpp_args: '-DDHC_EXPORTS',
-  link_args: '-ldinput8',
-
-  install: true,
-  install_dir: dist_dir
+cargo_script = find_program('build/cargo.sh')
+dhc = custom_target(
+  'dhc.dll',
+  build_by_default: true,
+  build_always_stale: true,
+  console: true,
+  output: ['dhc.dll', 'dummy.cpp'],
+  input: ['dhc/Cargo.toml'],
+  command : [cargo_script, target_machine.cpu_family(), '@INPUT@', '@OUTPUT0@', '@OUTPUT1@']
 )
 
 dinput8 = shared_library(
   'dinput8',
   name_prefix: '',
-  link_with: [dhc],
-  sources: ['dinput8/dinput8.cpp'],
+
+  include_directories: 'dhc/include',
+  link_args: ['dhc.dll'],
+
+  sources: [
+    'dinput8/dinput.cpp',
+    'dinput8/ps4.cpp',
+    'dinput8/utils.cpp',
+    dhc[1],
+  ],
   vs_module_defs: 'dinput8/dinput8.def',
 
   install: true,
-  install_dir: dist_dir
+  install_dir: dist_dir,
 )
 
 xinput1_3 = shared_library(
   'xinput1_3',
   name_prefix: '',
-  link_with: [dhc],
-  sources: ['xinput1_3/xinput1_3.cpp'],
+
+  include_directories: 'dhc/include',
+  link_args: ['dhc.dll'],
+
+  sources: [
+    'xinput1_3/xinput1_3.cpp',
+    dhc[1],
+  ],
   vs_module_defs: 'xinput1_3/xinput1_3.def',
 
   install: true,
-  install_dir: dist_dir
-)
-
-dhc_test = executable(
-  'dhc_test',
-  link_with: [dhc],
-  sources: ['test/dhc_test.cpp'],
-)
-
-dinput_test = executable(
-  'dinput_test',
-  link_with: [dhc],
-  sources: ['test/dinput_test.cpp'],
-  link_args: ['-ldinput8', '-ldxguid'],
+  install_dir: dist_dir,
 )

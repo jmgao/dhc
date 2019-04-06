@@ -5,10 +5,10 @@ set -ex
 unset CC
 unset CXX
 
-if [ "$1" == "--use-gcc" ]; then
-  TOOLCHAIN_PREFIX="toolchain-gcc"
-else
+if [ "$1" == "--use-clang" ]; then
   TOOLCHAIN_PREFIX="toolchain-clang"
+else
+  TOOLCHAIN_PREFIX="toolchain-gcc"
 fi
 
 cd $(dirname $(realpath $0))

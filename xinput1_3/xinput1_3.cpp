@@ -3,8 +3,6 @@
 // Hopefully, Microsoft maintained ABI compatibility between versions...
 #include <xinput.h>
 
-#include "dhc/dhc.h"
-#include "dhc/frontend/xinput.h"
 #include "dhc/logging.h"
 
 extern "C" {
@@ -24,37 +22,33 @@ BOOL WINAPI DllMain(HMODULE module, DWORD reason, void*) {
 }
 
 DWORD WINAPI XInputGetState(DWORD user_index, XINPUT_STATE* state) {
-  return dhc::XInputImplementation::Instance().GetState(user_index, state);
+  return ERROR_DEVICE_NOT_CONNECTED;
 }
 
 DWORD WINAPI XInputSetState(DWORD user_index, XINPUT_VIBRATION* vibration) {
-  return dhc::XInputImplementation::Instance().SetState(user_index, vibration);
+  return ERROR_DEVICE_NOT_CONNECTED;
 }
 
 DWORD WINAPI XInputGetCapabilities(DWORD user_index, DWORD flags,
                                    XINPUT_CAPABILITIES* capabilities) {
-  return dhc::XInputImplementation::Instance().GetCapabilities(user_index, flags, capabilities);
+  return ERROR_DEVICE_NOT_CONNECTED;
 }
 
-MSVC_SUPPRESS(4995)
 void WINAPI XInputEnable(BOOL enable) {
-  return dhc::XInputImplementation::Instance().Enable(enable);
 }
 
 DWORD WINAPI XInputGetDSoundAudioDeviceGuids(DWORD user_index, GUID* render_guid,
                                              GUID* capture_guid) {
-  return dhc::XInputImplementation::Instance().GetDSoundAudioDeviceGuids(user_index, render_guid,
-                                                                         capture_guid);
+  return ERROR_DEVICE_NOT_CONNECTED;
 }
 
 DWORD WINAPI XInputGetBatteryInformation(DWORD user_index, BYTE dev_type,
                                          XINPUT_BATTERY_INFORMATION* battery_information) {
-  return dhc::XInputImplementation::Instance().GetBatteryInformation(user_index, dev_type,
-                                                                     battery_information);
+  return ERROR_DEVICE_NOT_CONNECTED;
 }
 
 DWORD WINAPI XInputGetKeystroke(DWORD user_index, DWORD reserved, XINPUT_KEYSTROKE* keystroke) {
-  return dhc::XInputImplementation::Instance().GetKeystroke(user_index, reserved, keystroke);
+  return ERROR_DEVICE_NOT_CONNECTED;
 }
 
 void WINAPI Unknown100() {

@@ -4,22 +4,17 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 
-#include "dhc/frontend/dinput.h"
-
-#include <atomic>
 #include <deque>
 #include <string>
 #include <type_traits>
 #include <variant>
 #include <vector>
 
+#include "dhc/dhc.h"
 #include "dhc/logging.h"
-#include "dhc/timer.h"
-#include "dhc/utils.h"
+#include "dhc_dinput.h"
 
 using namespace std::string_literals;
-
-using namespace dhc::logging;
 
 namespace dhc {
 
@@ -31,10 +26,8 @@ template <typename CharType>
 class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
  public:
   explicit EmulatedDirectInput8(com_ptr<DI8Interface<CharType>> real) : real_(std::move(real)) {
-    auto ctx = Context::GetInstance();
-
-    p1_.reset(new EmulatedDirectInputDevice8<CharType>(ctx->GetDevice(0)));
-    p2_.reset(new EmulatedDirectInputDevice8<CharType>(ctx->GetDevice(1)));
+    p1_.reset(new EmulatedDirectInputDevice8<CharType>(0));
+    p2_.reset(new EmulatedDirectInputDevice8<CharType>(1));
   }
 
   virtual ~EmulatedDirectInput8() = default;
@@ -200,7 +193,7 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
 template <typename CharType>
 class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>> {
  public:
-  explicit EmulatedDirectInputDevice8(observer_ptr<Device> virtual_device) : vdev_(virtual_device) {
+  explicit EmulatedDirectInputDevice8(uintptr_t vdev_idx) : vdev_(vdev_idx) {
     objects_ = GeneratePS4EmulatedDeviceObjects();
   }
 
@@ -392,7 +385,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
       return DI_OK;
     } else if (&guid == &DIPROP_RANGE) {
       if (!(object->type & DIDFT_AXIS)) {
-        LOG(ERROR) << "attempted to set DIPROP_RANGE on non-axis";
+        LOG(DEBUG) << "attempted to set DIPROP_RANGE on non-axis";
         return DIERR_INVALIDPARAM;
       }
 
@@ -425,10 +418,10 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
   virtual HRESULT STDMETHODCALLTYPE GetDeviceState(DWORD size, void* buffer) override final {
     LOG(VERBOSE) << "EmulatedDirectInput8Device::GetDeviceState(" << size << ")";
-    TIMER();
     memset(buffer, 0, size);
+    DeviceInputs inputs = dhc_get_inputs(vdev_);
     for (const auto& fmt : device_formats_) {
-      fmt.Apply(static_cast<char*>(buffer), size, vdev_);
+      fmt.Apply(static_cast<char*>(buffer), size, inputs);
     }
     for (const auto& fmt_default : device_format_defaults_) {
       *reinterpret_cast<DWORD*>(static_cast<char*>(buffer) + fmt_default.offset) =
@@ -612,8 +605,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
   virtual HRESULT STDMETHODCALLTYPE Poll() override final {
     LOG(VERBOSE) << "EmulatedDirectInput8Device::Poll()";
-    TIMER();
-    vdev_->Update();
+    dhc_update();
     return DI_OK;
   }
 
@@ -655,7 +647,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
  private:
-  observer_ptr<Device> vdev_;
+  uintptr_t vdev_;
   std::vector<DIOBJECTDATAFORMAT> object_data_format_;
   std::vector<EmulatedDeviceObject> objects_;
   std::vector<DeviceFormat> device_formats_;
@@ -676,7 +668,7 @@ IDirectInput8A* GetEmulatedDirectInput8A() {
 }
 
 void DeviceFormat::Apply(char* output_buffer, size_t output_buffer_length,
-                         observer_ptr<Device> virtual_device) const {
+                         DeviceInputs inputs) const {
   std::visit(
       [&](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
@@ -696,8 +688,8 @@ void DeviceFormat::Apply(char* output_buffer, size_t output_buffer_length,
           CHECK(object->type & DIDFT_AXIS);
           CHECK_EQ(0ULL, offset % 4);
           CHECK_GE(output_buffer_length, offset + 4);
-          auto& axis = virtual_device->Axes()[arg];
-          double value = axis.value;
+          auto axis = dhc_get_axis(inputs, arg);
+          double value = axis._0;
           double distance = abs(value - 0.5);
           if (distance * 2 >= object->saturation) {
             value = value > 0.5 ? 1.0 : 0.0;
@@ -713,14 +705,52 @@ void DeviceFormat::Apply(char* output_buffer, size_t output_buffer_length,
         } else if constexpr (std::is_same_v<T, ButtonType>) {
           CHECK(object->type & DIDFT_BUTTON);
           CHECK_GE(output_buffer_length, offset + 1);
-          auto value = virtual_device->Buttons()[arg].pressed;
+          auto value = dhc_get_button(inputs, arg)._0;
           output_buffer[offset] = value ? -128 : 0;
-        } else if constexpr (std::is_same_v<T, PovType>) {
+        } else if constexpr (std::is_same_v<T, HatType>) {
           CHECK(object->type & DIDFT_POV);
           CHECK_EQ(0ULL, offset % 4);
           CHECK_GE(output_buffer_length, offset + 4);
-          auto value = virtual_device->Povs()[arg].state;
-          *reinterpret_cast<DWORD*>(&output_buffer[offset]) = static_cast<DWORD>(value);
+          auto hat = dhc_get_hat(inputs, arg);
+          DWORD value = 0;
+          switch (hat) {
+          case Hat::Neutral:
+            value = -1;
+            break;
+
+          case Hat::North:
+            value = 0;
+            break;
+
+          case Hat::NorthEast:
+            value = 4500;
+            break;
+
+          case Hat::East:
+            value = 9000;
+            break;
+
+          case Hat::SouthEast:
+            value = 13500;
+            break;
+
+          case Hat::South:
+            value = 18000;
+            break;
+
+          case Hat::SouthWest:
+            value = 22500;
+            break;
+
+          case Hat::West:
+            value = 27000;
+            break;
+
+          case Hat::NorthWest:
+            value = 31500;
+            break;
+          }
+          *reinterpret_cast<DWORD *>(&output_buffer[offset]) = value;
         } else {
           LOG(FATAL) << "unhandled type?";
         }
@@ -729,3 +759,66 @@ void DeviceFormat::Apply(char* output_buffer, size_t output_buffer_length,
 }
 
 }  // namespace dhc
+
+BOOL WINAPI DllMain(HMODULE module, DWORD reason, void *) {
+  switch (reason) {
+  case DLL_PROCESS_ATTACH:
+    DisableThreadLibraryCalls(module);
+    break;
+
+  case DLL_THREAD_ATTACH:
+  case DLL_THREAD_DETACH:
+  case DLL_PROCESS_DETACH:
+    break;
+  }
+  return TRUE;
+}
+
+extern "C" HRESULT WINAPI DirectInput8Create(HINSTANCE hinst, DWORD version,
+                                             REFIID desired_interface,
+                                             void **out_interface,
+                                             IUnknown *unknown) {
+  dhc_init();
+
+  bool unicode = desired_interface == IID_IDirectInput8W;
+  if (!unicode) {
+    CHECK(IID_IDirectInput8A == desired_interface);
+  }
+
+  LOG(INFO) << "requested DirectInput8 " << (unicode ? "unicode" : "ascii")
+            << " interface, with" << (unknown ? "" : "out") << " COM interface";
+
+  IUnknown *result;
+  if (unicode) {
+    result = dhc::GetEmulatedDirectInput8W();
+  } else {
+    result = dhc::GetEmulatedDirectInput8A();
+  }
+
+  result->AddRef();
+  *out_interface = result;
+  return DI_OK;
+}
+
+extern "C" HRESULT WINAPI DllCanUnloadNow() { return S_FALSE; }
+
+extern "C" HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid,
+                                            void **ppv) {
+  UNIMPLEMENTED(FATAL);
+  abort();
+}
+
+extern "C" HRESULT WINAPI DllRegisterServer() {
+  UNIMPLEMENTED(FATAL);
+  abort();
+}
+
+extern "C" HRESULT WINAPI DllUnregisterServer() {
+  UNIMPLEMENTED(FATAL);
+  abort();
+}
+
+extern "C" void WINAPI GetdfDIJoystick() {
+  UNIMPLEMENTED(FATAL);
+  abort();
+}
