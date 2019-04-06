@@ -38,6 +38,7 @@ pub extern "C" fn dhc_init() {
       std::env::set_var("RUST_LOG", "info");
     }
     pretty_env_logger::init();
+    log_panics::init();
 
     info!("dhc initialized");
   });
