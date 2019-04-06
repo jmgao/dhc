@@ -34,6 +34,9 @@ pub extern "C" fn dhc_init() {
     Context::instance();
 
     unsafe { AllocConsole() };
+    if std::env::var("RUST_LOG").is_err() {
+      std::env::set_var("RUST_LOG", "info");
+    }
     pretty_env_logger::init();
 
     info!("dhc initialized");
@@ -41,8 +44,8 @@ pub extern "C" fn dhc_init() {
 }
 
 #[no_mangle]
-pub extern "C" fn dhc_log(level: LogLevel, msg: *const u8, msg_len: usize) {
-  let string = unsafe { std::str::from_utf8_unchecked(std::slice::from_raw_parts(msg, msg_len)) };
+pub unsafe extern "C" fn dhc_log(level: LogLevel, msg: *const u8, msg_len: usize) {
+  let string = std::str::from_utf8_unchecked(std::slice::from_raw_parts(msg, msg_len));
 
   if level == LogLevel::Fatal {
     panic!("{}", string);

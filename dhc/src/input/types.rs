@@ -1,7 +1,7 @@
 use std::fmt;
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 pub struct Axis(f32);
 
 impl Axis {
@@ -93,7 +93,7 @@ pub enum HatType {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 pub struct DeviceInputs {
   pub axis_left_stick_x: Axis,
   pub axis_left_stick_y: Axis,
@@ -136,6 +136,41 @@ pub struct DeviceInputs {
   pub button_r3: Button,
 
   pub button_trackpad: Button,
+}
+
+impl Default for DeviceInputs {
+  fn default() -> DeviceInputs {
+    DeviceInputs {
+      axis_left_stick_x: Axis(0.5),
+      axis_left_stick_y: Axis(0.5),
+
+      axis_right_stick_x: Axis(0.5),
+      axis_right_stick_y: Axis(0.5),
+
+      axis_left_trigger: Axis(0.5),
+      axis_right_trigger: Axis(0.5),
+
+      hat_dpad: Hat::default(),
+      button_start: Button::default(),
+      button_select: Button::default(),
+      button_home: Button::default(),
+
+      button_north: Button::default(),
+      button_east: Button::default(),
+      button_south: Button::default(),
+      button_west: Button::default(),
+
+      button_l1: Button::default(),
+      button_l2: Button::default(),
+      button_l3: Button::default(),
+
+      button_r1: Button::default(),
+      button_r2: Button::default(),
+      button_r3: Button::default(),
+
+      button_trackpad: Button::default(),
+    }
+  }
 }
 
 impl fmt::Display for DeviceInputs {

@@ -10,18 +10,17 @@ use winapi::um::consoleapi::AllocConsole;
 
 use std::sync::RwLock;
 
-mod inputs;
-pub use inputs::*;
-
 pub mod ffi;
-mod rawinput;
+
+mod input;
+pub use input::types::*;
 
 pub fn init() {}
 
 #[derive(Default)]
 struct VirtualDeviceState {
   inputs: DeviceInputs,
-  binding: Option<rawinput::DeviceId>,
+  binding: Option<input::DeviceId>,
 }
 
 // TODO: Make the number of devices configurable?
@@ -30,7 +29,7 @@ const VIRTUAL_DEVICE_COUNT: usize = 2;
 struct VirtualDeviceId(usize);
 
 struct RealDeviceState {
-  id: rawinput::DeviceId,
+  id: input::DeviceId,
   name: String,
   buffer: triple_buffer::Output<DeviceInputs>,
   binding: Option<VirtualDeviceId>,
@@ -42,7 +41,7 @@ struct State {
   real_devices: Vec<RealDeviceState>,
 }
 
-fn find_real_device(real_devices: &[RealDeviceState], id: rawinput::DeviceId) -> Option<usize> {
+fn find_real_device(real_devices: &[RealDeviceState], id: input::DeviceId) -> Option<usize> {
   for (idx, device) in real_devices.iter().enumerate() {
     if device.id == id {
       return Some(idx);
@@ -110,7 +109,7 @@ impl State {
 
   fn add_device(
     &mut self,
-    id: rawinput::DeviceId,
+    id: input::DeviceId,
     name: String,
     buffer: triple_buffer::Output<DeviceInputs>,
   ) {
@@ -124,7 +123,7 @@ impl State {
     self.bind_devices();
   }
 
-  fn remove_device(&mut self, id: rawinput::DeviceId) {
+  fn remove_device(&mut self, id: input::DeviceId) {
     let real_device_idx = find_real_device(&self.real_devices, id).unwrap();
     self.unbind_device(real_device_idx);
 
@@ -152,7 +151,7 @@ impl State {
 }
 
 pub struct Context {
-  input: rawinput::Context,
+  input: input::Context,
   state: RwLock<State>,
 }
 
@@ -162,9 +161,9 @@ lazy_static! {
 
 impl Context {
   fn new() -> Context {
-    let ctx = rawinput::Context::new();
-    ctx.register_device_type(rawinput::DeviceType::Joystick);
-    ctx.register_device_type(rawinput::DeviceType::GamePad);
+    let ctx = input::Context::new();
+    ctx.register_device_type(input::RawInputDeviceType::Joystick);
+    ctx.register_device_type(input::RawInputDeviceType::GamePad);
     Context {
       input: ctx,
       state: RwLock::new(State::default()),
@@ -193,11 +192,11 @@ impl Context {
     let events = self.input.get_events();
     for event in events {
       match event {
-        rawinput::RawInputEvent::DeviceArrived(description, buffer) => {
+        input::RawInputEvent::DeviceArrived(description, buffer) => {
           state.add_device(description.device_id, description.device_name, buffer);
         }
 
-        rawinput::RawInputEvent::DeviceRemoved(id) => {
+        input::RawInputEvent::DeviceRemoved(id) => {
           state.remove_device(id);
         }
       }

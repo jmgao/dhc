@@ -24,7 +24,8 @@ use winapi::um::handleapi::INVALID_HANDLE_VALUE;
 use winapi::um::winnt::{FILE_SHARE_READ, FILE_SHARE_WRITE};
 use winapi::um::winuser::*;
 
-use crate::rawinput::{DeviceDescription, DeviceId, DeviceInputs, Hat};
+use crate::input::{DeviceDescription, DeviceId, DeviceType, RawInputDeviceId};
+use crate::input::types::{DeviceInputs, Hat};
 
 const USAGE_PAGE_BUTTON: u16 = 9;
 
@@ -39,13 +40,6 @@ const USAGE_RZ: u16 = 0x35;
 const USAGE_HAT: u16 = 0x39;
 
 const MAX_BUTTONS: usize = 32;
-
-enum DeviceType {
-  PS4,
-  PS3,
-  Generic,
-  Xinput,
-}
 
 struct HidPreparsedData {
   ptr: PHIDP_PREPARSED_DATA,
@@ -87,6 +81,7 @@ impl HidPreparsedData {
     vec
   }
 
+  #[allow(dead_code)]
   fn get_link_collection_nodes(&self) -> Vec<HIDP_LINK_COLLECTION_NODE> {
     let mut result = Vec::with_capacity(128);
     unsafe {
@@ -94,7 +89,6 @@ impl HidPreparsedData {
       let rc = HidP_GetLinkCollectionNodes(result.as_mut_ptr(), &mut size, self.raw());
       assert_eq!(HIDP_STATUS_SUCCESS, rc);
       result.set_len(size as usize);
-      trace!("nodes: {}", size);
     }
     result
   }
@@ -165,24 +159,6 @@ impl HidParser {
       device_type = DeviceType::PS3;
     }
 
-    let caps = hid.get_caps();
-    info!(
-      "NumberLinkCollectionNodes = {}",
-      caps.NumberLinkCollectionNodes
-    );
-    info!("NumberInputButtonCaps = {}", caps.NumberInputButtonCaps);
-    info!("NumberInputValueCaps = {}", caps.NumberInputValueCaps);
-    info!("NumberInputDataIndices = {}", caps.NumberInputDataIndices);
-    info!("NumberOutputButtonCaps = {}", caps.NumberOutputButtonCaps);
-    info!("NumberOutputValueCaps = {}", caps.NumberOutputValueCaps);
-    info!("NumberOutputDataIndices = {}", caps.NumberOutputDataIndices);
-    info!("NumberFeatureButtonCaps = {}", caps.NumberFeatureButtonCaps);
-    info!("NumberFeatureValueCaps = {}", caps.NumberFeatureValueCaps);
-    info!(
-      "NumberFeatureDataIndices = {}",
-      caps.NumberFeatureDataIndices
-    );
-
     let value_caps = hid.get_value_caps();
     for (idx, value_cap) in value_caps.iter().enumerate() {
       info!("Value cap {}:", idx);
@@ -202,14 +178,6 @@ impl HidParser {
       }
     }
 
-    let link_collection_nodes = hid.get_link_collection_nodes();
-    for node in &link_collection_nodes {
-      info!(
-        "node = LinkUsage({}), LinkUsagePage({}), NumberOfChildren({})",
-        node.LinkUsage, node.LinkUsagePage, node.NumberOfChildren
-      );
-    }
-
     HidParser {
       hid,
       device_type,
@@ -221,7 +189,7 @@ impl HidParser {
     let value_caps = hid.get_value_caps();
     HidParser {
       hid,
-      device_type: DeviceType::Xinput,
+      device_type: DeviceType::XInput,
       value_caps,
     }
   }
@@ -240,7 +208,9 @@ impl HidParser {
         self.parse_ps4(data)
       }
 
-      DeviceType::Xinput => self.parse_xinput(data),
+      DeviceType::XInput => {
+        unimplemented!();
+      }
     }
   }
 
@@ -306,6 +276,8 @@ impl HidParser {
     result
   }
 
+  // TODO: Delete?
+  #[allow(dead_code)]
   fn parse_xinput(&self, data: &[u8]) -> DeviceInputs {
     let mut result = DeviceInputs::default();
 
@@ -368,7 +340,7 @@ impl HidParser {
   }
 }
 
-fn get_rawinput_device_info_impl(device_id: DeviceId, cmd: UINT) -> Vec<u8> {
+fn get_rawinput_device_info_impl(device_id: RawInputDeviceId, cmd: UINT) -> Vec<u8> {
   let size = match cmd {
     RIDI_DEVICEINFO => std::mem::size_of::<RID_DEVICE_INFO>(),
     _ => {
@@ -395,7 +367,7 @@ fn get_rawinput_device_info_impl(device_id: DeviceId, cmd: UINT) -> Vec<u8> {
   result
 }
 
-fn get_rawinput_device_path(device_id: DeviceId) -> CString {
+fn get_rawinput_device_path(device_id: RawInputDeviceId) -> CString {
   let mut result = get_rawinput_device_info_impl(device_id, RIDI_DEVICENAME);
 
   // Drop the trailing null terminator.
@@ -407,7 +379,7 @@ fn get_rawinput_device_path(device_id: DeviceId) -> CString {
   CString::new(result).unwrap()
 }
 
-fn get_rawinput_device_info(device_id: DeviceId) -> RID_DEVICE_INFO {
+fn get_rawinput_device_info(device_id: RawInputDeviceId) -> RID_DEVICE_INFO {
   let bytes = get_rawinput_device_info_impl(device_id, RIDI_DEVICEINFO);
   #[allow(clippy::cast_ptr_alignment)]
   unsafe {
@@ -540,7 +512,7 @@ fn is_xinput_device_path(path: &CString) -> bool {
   twoway::find_bytes(path.as_bytes(), b"&IG_").is_some()
 }
 
-pub fn open_rawinput_device(device_id: DeviceId) -> io::Result<(HidParser, DeviceDescription)> {
+pub(crate) fn open_rawinput_device(device_id: RawInputDeviceId) -> io::Result<(HidParser, DeviceType, DeviceDescription)> {
   let info = get_rawinput_device_info(device_id);
 
   let hid_path = get_rawinput_device_path(device_id);
@@ -559,10 +531,13 @@ pub fn open_rawinput_device(device_id: DeviceId) -> io::Result<(HidParser, Devic
     HidParser::new(preparsed_data)
   };
 
+  let device_type = hid_parser.device_type;
+
   Ok((
     hid_parser,
+    device_type,
     DeviceDescription {
-      device_id,
+      device_id: DeviceId::RawInput(device_id),
       device_name,
     },
   ))

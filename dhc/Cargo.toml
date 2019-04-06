@@ -18,6 +18,7 @@ twoway = "0.2.0"
 
 winapi = { version = "0.3", features = ["winuser", "handleapi", "hidpi", "hidsdi"] }
 hwndloop = "0.1.5"
+rusty-xinput = { path = "../rusty-xinput" }
 
 [lib]
 crate-type = ["rlib", "cdylib"]
