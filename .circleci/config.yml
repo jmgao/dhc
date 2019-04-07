@@ -6,6 +6,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Pull submodules
+          command: git submodule update --init
+      - run:
           name: Generate build files
           command: ./build/generate.sh
       - run:
@@ -23,6 +26,9 @@ jobs:
       - image: jmgao/ubuntu-cosmic-mingw-w64-rust:latest
     steps:
       - checkout
+      - run:
+          name: Pull submodules
+          command: git submodule update --init
       - run:
           name: Generate build files
           command: ./build/generate.sh
