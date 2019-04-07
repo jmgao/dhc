@@ -59,9 +59,11 @@ dhc = custom_target(
   build_by_default: true,
   build_always_stale: true,
   console: true,
-  output: ['dhc.dll', 'dummy.cpp'],
+  output: ['dhc.dll'],
   input: ['dhc/Cargo.toml'],
-  command : [cargo_script, target_machine.cpu_family(), '@INPUT@', '@OUTPUT0@', '@OUTPUT1@']
+  command : [cargo_script, target_machine.cpu_family(), '@INPUT@', '@OUTPUT0@'],
+  install: true,
+  install_dir: dist_dir,
 )
 
 dinput8 = shared_library(
@@ -69,13 +71,13 @@ dinput8 = shared_library(
   name_prefix: '',
 
   include_directories: 'dhc/include',
-  link_args: ['dhc.dll'],
+  link_args: [dhc.full_path()],
+  link_depends: dhc,
 
   sources: [
     'dinput8/dinput.cpp',
     'dinput8/ps4.cpp',
     'dinput8/utils.cpp',
-    dhc[1],
   ],
   vs_module_defs: 'dinput8/dinput8.def',
 
@@ -88,11 +90,11 @@ xinput1_3 = shared_library(
   name_prefix: '',
 
   include_directories: 'dhc/include',
-  link_args: ['dhc.dll'],
+  link_args: [dhc.full_path()],
+  link_depends: dhc,
 
   sources: [
     'xinput1_3/xinput1_3.cpp',
-    dhc[1],
   ],
   vs_module_defs: 'xinput1_3/xinput1_3.def',
 
