@@ -92,10 +92,7 @@ impl State {
           continue;
         }
 
-        info!(
-          "Binding virtual device {} to {} ({:?})",
-          vdev_idx, rdev.name, rdev.id
-        );
+        info!("Binding virtual device {} to {} ({:?})", vdev_idx, rdev.name, rdev.id);
         vdev.binding = Some(rdev.id);
         rdev.binding = Some(VirtualDeviceId(vdev_idx));
         bound = true;
@@ -129,12 +126,7 @@ impl State {
     }
   }
 
-  fn add_device(
-    &mut self,
-    id: input::DeviceId,
-    name: String,
-    buffer: triple_buffer::Output<DeviceInputs>,
-  ) {
+  fn add_device(&mut self, id: input::DeviceId, name: String, buffer: triple_buffer::Output<DeviceInputs>) {
     info!("Device arrived: {} ({:?})", name, id);
     self.real_devices.push(RealDeviceState {
       id,

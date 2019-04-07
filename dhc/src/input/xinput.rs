@@ -2,8 +2,9 @@ use winapi::shared::minwindef::MAX_PATH;
 use winapi::um::sysinfoapi::GetSystemDirectoryW;
 
 use rusty_xinput::XInputHandle;
-use crate::input::XInputDeviceId;
+
 use crate::input::types::*;
+use crate::input::XInputDeviceId;
 
 lazy_static! {
   static ref XINPUT_HANDLE: XInputHandle = open_xinput();

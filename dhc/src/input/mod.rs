@@ -198,8 +198,7 @@ impl RawInputManager {
       dwFlags: RIDEV_INPUTSINK | RIDEV_DEVNOTIFY,
       hwndTarget: hwnd,
     };
-    let result =
-      unsafe { RegisterRawInputDevices(&rid, 1, std::mem::size_of::<RAWINPUTDEVICE>() as UINT) };
+    let result = unsafe { RegisterRawInputDevices(&rid, 1, std::mem::size_of::<RAWINPUTDEVICE>() as UINT) };
     if result == 0 {
       panic!(
         "RegisterRawInputDevices failed while registering device type {:?}",
@@ -209,20 +208,14 @@ impl RawInputManager {
     reply.send(()).unwrap();
   }
 
-  fn cmd_unregister_device_type(
-    &mut self,
-    _hwnd: HWND,
-    device_type: RawInputDeviceType,
-    reply: Sender<()>,
-  ) {
+  fn cmd_unregister_device_type(&mut self, _hwnd: HWND, device_type: RawInputDeviceType, reply: Sender<()>) {
     let rid = RAWINPUTDEVICE {
       usUsagePage: device_type.usage_page(),
       usUsage: device_type.usage(),
       dwFlags: RIDEV_REMOVE,
       hwndTarget: std::ptr::null_mut(),
     };
-    let result =
-      unsafe { RegisterRawInputDevices(&rid, 1, std::mem::size_of::<RAWINPUTDEVICE>() as UINT) };
+    let result = unsafe { RegisterRawInputDevices(&rid, 1, std::mem::size_of::<RAWINPUTDEVICE>() as UINT) };
     if result == 0 {
       panic!(
         "RegisterRawInputDevices failed while unregistering device type {:?}",
@@ -285,7 +278,11 @@ impl RawInputManager {
     let default_inputs = DeviceInputs::default();
     let (write, read) = triple_buffer::TripleBuffer::new(default_inputs).split();
 
-    let device = RawInputDeviceState { buffer: write, hid, is_xinput };
+    let device = RawInputDeviceState {
+      buffer: write,
+      hid,
+      is_xinput,
+    };
     self.devices.insert(device_id, device);
 
     if is_xinput {
@@ -358,9 +355,7 @@ impl RawInputManager {
     let default_inputs = DeviceInputs::default();
     for id in new {
       let (write, read) = triple_buffer::TripleBuffer::new(default_inputs).split();
-      let xinput_device = XInputDeviceState {
-        buffer: write,
-      };
+      let xinput_device = XInputDeviceState { buffer: write };
       self.xinput_devices.insert(id, xinput_device);
 
       let description = DeviceDescription {

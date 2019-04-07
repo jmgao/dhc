@@ -9,9 +9,7 @@ use winapi::shared::hidpi::{
 use winapi::shared::hidpi::{
   HidP_Input, HIDP_STATUS_INCOMPATIBLE_REPORT_ID, HIDP_STATUS_SUCCESS, HIDP_STATUS_USAGE_NOT_FOUND,
 };
-use winapi::shared::hidpi::{
-  HIDP_CAPS, HIDP_LINK_COLLECTION_NODE, HIDP_VALUE_CAPS, PHIDP_PREPARSED_DATA,
-};
+use winapi::shared::hidpi::{HIDP_CAPS, HIDP_LINK_COLLECTION_NODE, HIDP_VALUE_CAPS, PHIDP_PREPARSED_DATA};
 use winapi::shared::hidsdi::{
   HidD_FreePreparsedData, HidD_GetManufacturerString, HidD_GetPreparsedData, HidD_GetProductString,
   HidD_GetSerialNumberString,
@@ -24,8 +22,8 @@ use winapi::um::handleapi::INVALID_HANDLE_VALUE;
 use winapi::um::winnt::{FILE_SHARE_READ, FILE_SHARE_WRITE};
 use winapi::um::winuser::*;
 
-use crate::input::{DeviceDescription, DeviceId, DeviceType, RawInputDeviceId};
 use crate::input::types::{DeviceInputs, Hat};
+use crate::input::{DeviceDescription, DeviceId, DeviceType, RawInputDeviceId};
 
 const USAGE_PAGE_BUTTON: u16 = 9;
 
@@ -345,14 +343,7 @@ fn get_rawinput_device_info_impl(device_id: RawInputDeviceId, cmd: UINT) -> Vec<
     RIDI_DEVICEINFO => std::mem::size_of::<RID_DEVICE_INFO>(),
     _ => {
       let mut received_size = 0;
-      let rc = unsafe {
-        GetRawInputDeviceInfoA(
-          device_id.as_handle(),
-          cmd,
-          std::ptr::null_mut(),
-          &mut received_size,
-        )
-      };
+      let rc = unsafe { GetRawInputDeviceInfoA(device_id.as_handle(), cmd, std::ptr::null_mut(), &mut received_size) };
       assert_eq!(rc, 0);
       received_size as usize
     }
@@ -459,11 +450,7 @@ fn open_rawinput_hid_device(path: CString) -> io::Result<HANDLE> {
 
   if hid_file == INVALID_HANDLE_VALUE {
     let err = std::io::Error::last_os_error();
-    error!(
-      "failed to open HID device at {}: {}",
-      path.to_str().unwrap(),
-      err
-    );
+    error!("failed to open HID device at {}: {}", path.to_str().unwrap(), err);
     Err(err)
   } else {
     info!("successfully opened HID device: {}", path.to_str().unwrap());
@@ -512,7 +499,9 @@ fn is_xinput_device_path(path: &CString) -> bool {
   twoway::find_bytes(path.as_bytes(), b"&IG_").is_some()
 }
 
-pub(crate) fn open_rawinput_device(device_id: RawInputDeviceId) -> io::Result<(HidParser, DeviceType, DeviceDescription)> {
+pub(crate) fn open_rawinput_device(
+  device_id: RawInputDeviceId,
+) -> io::Result<(HidParser, DeviceType, DeviceDescription)> {
   let info = get_rawinput_device_info(device_id);
 
   let hid_path = get_rawinput_device_path(device_id);
