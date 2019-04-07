@@ -18,5 +18,5 @@ OUTPUT_DIR=$(dirname "$(realpath "$DLL_OUTPUT_PATH")")
 CARGO_TARGET_DIR=${OUTPUT_DIR}/target
 
 cargo build --manifest-path=$CARGO_TOML --target-dir "$CARGO_TARGET_DIR" --release --target $TARGET
-cp ${CARGO_TARGET_DIR}/${TARGET}/release/dhc.dll "$OUTPUT_DIR"
-cp ${CARGO_TARGET_DIR}/${TARGET}/release/dhc.exe "$OUTPUT_DIR"
+strip ${CARGO_TARGET_DIR}/${TARGET}/release/dhc.dll -o "${OUTPUT_DIR}/dhc.dll"
+strip ${CARGO_TARGET_DIR}/${TARGET}/release/dhc.exe -o "${OUTPUT_DIR}/dhc.exe"
