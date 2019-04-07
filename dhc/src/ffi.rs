@@ -1,7 +1,5 @@
 use crate::*;
 
-use parking_lot::{Once, ONCE_INIT};
-
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq)]
 pub enum LogLevel {
@@ -26,22 +24,9 @@ impl LogLevel {
   }
 }
 
-static ONCE: Once = ONCE_INIT;
-
 #[no_mangle]
 pub extern "C" fn dhc_init() {
-  ONCE.call_once(|| {
-    Context::instance();
-
-    unsafe { AllocConsole() };
-    if std::env::var("RUST_LOG").is_err() {
-      std::env::set_var("RUST_LOG", "info");
-    }
-    pretty_env_logger::init();
-    log_panics::init();
-
-    info!("dhc initialized");
-  });
+  crate::init();
 }
 
 #[no_mangle]

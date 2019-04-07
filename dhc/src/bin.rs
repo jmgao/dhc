@@ -1,7 +1,6 @@
 extern crate dhc;
 
 fn main() {
-  pretty_env_logger::init();
   dhc::init();
   let ctx = dhc::Context::instance();
 

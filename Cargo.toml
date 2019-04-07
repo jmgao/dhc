@@ -8,5 +8,4 @@ members = [
 panic = "abort"
 
 [profile.release]
-lto = true
 panic = "abort"

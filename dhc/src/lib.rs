@@ -8,14 +8,36 @@ extern crate lazy_static;
 extern crate winapi;
 use winapi::um::consoleapi::AllocConsole;
 
+use parking_lot::{Once, ONCE_INIT};
 use std::sync::RwLock;
 
 pub mod ffi;
 
+mod config;
+use config::Config;
+
+mod logger;
+
 mod input;
 pub use input::types::*;
 
-pub fn init() {}
+static ONCE: Once = ONCE_INIT;
+
+pub fn init() {
+  ONCE.call_once(|| {
+    Context::instance();
+
+    unsafe { AllocConsole() };
+    if std::env::var("RUST_LOG").is_err() {
+      std::env::set_var("RUST_LOG", "info");
+    }
+
+    pretty_env_logger::init();
+    log_panics::init();
+
+    info!("dhc v{} initialized", env!("CARGO_PKG_VERSION"));
+  });
+}
 
 #[derive(Default)]
 struct VirtualDeviceState {
