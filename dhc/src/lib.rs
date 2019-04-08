@@ -24,6 +24,23 @@ mod input;
 pub use input::types::*;
 
 static ONCE: Once = ONCE_INIT;
+lazy_static! {
+  static ref CONFIG: std::io::Result<Config> = {
+    let mut path = PathBuf::from(get_executable_path());
+    path.pop();
+    path.push("dhc.toml");
+    Config::read(&path)
+  };
+
+  static ref CONTEXT: Context = {
+    let device_count = match *CONFIG {
+      Ok(ref config) => config.device_count,
+      Err(_) => Config::default().device_count,
+    };
+    Context::new(device_count)
+  };
+}
+
 
 fn get_executable_path() -> String {
   let process = unsafe { GetModuleHandleW(std::ptr::null_mut()) };
@@ -38,33 +55,23 @@ fn get_executable_path() -> String {
 
 pub fn init() {
   ONCE.call_once(|| {
-    Context::instance();
-
-    let mut path = PathBuf::from(get_executable_path());
-    path.pop();
-    path.push("dhc.toml");
-
-    let config = Config::read(&path);
-    logger::init(config.as_ref().ok());
+    logger::init(CONFIG.as_ref().ok());
 
     info!("dhc v{} initialized", env!("CARGO_PKG_VERSION"));
 
     // We need to wait until the logger has been initialized to warn about this.
-    if let Err(error) = config {
+    if let Err(ref error) = *CONFIG {
       warn!("failed to read config: {}", error);
       warn!("falling back to default configuration");
     }
   });
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 struct VirtualDeviceState {
   inputs: DeviceInputs,
   binding: Option<input::DeviceId>,
 }
-
-// TODO: Make the number of devices configurable?
-const VIRTUAL_DEVICE_COUNT: usize = 2;
 
 struct VirtualDeviceId(usize);
 
@@ -75,9 +82,8 @@ struct RealDeviceState {
   binding: Option<VirtualDeviceId>,
 }
 
-#[derive(Default)]
 struct State {
-  virtual_devices: [VirtualDeviceState; VIRTUAL_DEVICE_COUNT],
+  virtual_devices: Vec<VirtualDeviceState>,
   real_devices: Vec<RealDeviceState>,
 }
 
@@ -91,6 +97,13 @@ fn find_real_device(real_devices: &[RealDeviceState], id: input::DeviceId) -> Op
 }
 
 impl State {
+  fn new(device_count: usize) -> State {
+    State {
+      virtual_devices: vec![VirtualDeviceState::default(); device_count],
+      real_devices: Vec::new(),
+    }
+  }
+
   fn bind_devices(&mut self) {
     let State {
       ref mut virtual_devices,
@@ -185,20 +198,18 @@ impl State {
 pub struct Context {
   input: input::Context,
   state: RwLock<State>,
-}
-
-lazy_static! {
-  static ref CONTEXT: Context = Context::new();
+  device_count: usize
 }
 
 impl Context {
-  fn new() -> Context {
+  fn new(device_count: usize) -> Context {
     let ctx = input::Context::new();
     ctx.register_device_type(input::RawInputDeviceType::Joystick);
     ctx.register_device_type(input::RawInputDeviceType::GamePad);
     Context {
       input: ctx,
-      state: RwLock::new(State::default()),
+      state: RwLock::new(State::new(device_count)),
+      device_count: device_count,
     }
   }
 
@@ -207,7 +218,7 @@ impl Context {
   }
 
   pub fn device_count(&self) -> usize {
-    VIRTUAL_DEVICE_COUNT
+    self.device_count
   }
 
   pub fn device_state(&self, idx: usize) -> DeviceInputs {

@@ -14,6 +14,9 @@ pub struct Config {
 
   #[serde(default = "default_log_level")]
   pub log_level: logger::LogLevel,
+
+  #[serde(default = "default_device_count")]
+  pub device_count: usize,
 }
 
 fn default_console() -> bool {
@@ -24,11 +27,16 @@ fn default_log_level() -> logger::LogLevel {
   logger::LogLevel::Info
 }
 
+fn default_device_count() -> usize {
+  2
+}
+
 impl Default for Config {
   fn default() -> Config {
     Config {
       console: default_console(),
       log_level: default_log_level(),
+      device_count: default_device_count(),
     }
   }
 }
