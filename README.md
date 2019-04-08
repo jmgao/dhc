@@ -61,10 +61,6 @@ The built DLLs will be copied into `dist/{i686, x86_64}`.
 
 ### Known issues
 
-- XInput emulation is currently implemented as a no-op that pretends that no
-  controllers are connected. This should only affect games that weren't actually
-  finished before releasing (i.e. SF5).
-
 - XInput controllers only get their triggers forwarded as digital buttons, not
   analog values.
 
