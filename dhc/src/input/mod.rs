@@ -1,5 +1,7 @@
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::mpsc::{channel, Sender};
 
 use parking_lot::Mutex;
@@ -108,6 +110,7 @@ enum RawInputCommand {
 
 struct RawInputManager {
   event_queue: Mutex<VecDeque<RawInputEvent>>,
+  events_pending: Arc<AtomicUsize>,
   devices: HashMap<RawInputDeviceId, RawInputDeviceState>,
   xinput_devices: HashMap<XInputDeviceId, XInputDeviceState>,
 }
@@ -186,11 +189,12 @@ struct AlignedBuffer {
 }
 
 impl RawInputManager {
-  fn new() -> RawInputManager {
+  fn new(events_pending: Arc<AtomicUsize>) -> RawInputManager {
     RawInputManager {
       event_queue: Mutex::new(VecDeque::new()),
       devices: HashMap::new(),
       xinput_devices: HashMap::new(),
+      events_pending,
     }
   }
 
@@ -292,7 +296,8 @@ impl RawInputManager {
       self.scan_xinput();
     } else {
       let mut queue = self.event_queue.lock();
-      queue.push_back(RawInputEvent::DeviceArrived(description, read))
+      queue.push_back(RawInputEvent::DeviceArrived(description, read));
+      self.events_pending.fetch_add(1, Ordering::SeqCst);
     }
   }
 
@@ -310,6 +315,7 @@ impl RawInputManager {
     } else {
       let mut queue = self.event_queue.lock();
       queue.push_back(RawInputEvent::DeviceRemoved(DeviceId::RawInput(device_id)));
+      self.events_pending.fetch_add(1, Ordering::SeqCst);
     }
   }
 
@@ -377,14 +383,17 @@ impl RawInputManager {
 /// Client for the RawInputManager.
 pub struct Context {
   eventloop: HwndLoop<RawInputCommand>,
+  events_pending: Arc<AtomicUsize>,
 }
 
 impl Context {
   #[allow(clippy::new_without_default)]
   pub fn new() -> Context {
-    let manager = RawInputManager::new();
+    let events_pending = Arc::new(AtomicUsize::new(0));
+    let manager = RawInputManager::new(Arc::clone(&events_pending));
     Context {
       eventloop: HwndLoop::new(Box::new(manager)),
+      events_pending: events_pending,
     }
   }
 
@@ -404,9 +413,14 @@ impl Context {
   }
 
   pub fn get_events(&self) -> VecDeque<RawInputEvent> {
-    let (tx, rx) = channel();
-    let cmd = RawInputCommand::GetEvents(tx);
-    self.eventloop.send_command(cmd);
-    rx.recv().unwrap()
+    let events_pending = self.events_pending.load(Ordering::SeqCst);
+    if events_pending > 0 {
+      let (tx, rx) = channel();
+      let cmd = RawInputCommand::GetEvents(tx);
+      self.eventloop.send_command(cmd);
+      rx.recv().unwrap()
+    } else {
+      VecDeque::new()
+    }
   }
 }
