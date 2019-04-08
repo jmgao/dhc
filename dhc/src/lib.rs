@@ -57,7 +57,12 @@ pub fn init() {
   ONCE.call_once(|| {
     logger::init(CONFIG.as_ref().ok());
 
-    info!("dhc v{} initialized", env!("CARGO_PKG_VERSION"));
+    info!(
+      "dhc v{}-{} ({}) initialized",
+      env!("CARGO_PKG_VERSION"),
+      env!("VERGEN_SHA_SHORT"),
+      env!("VERGEN_COMMIT_DATE")
+    );
 
     // We need to wait until the logger has been initialized to warn about this.
     if let Err(ref error) = *CONFIG {
