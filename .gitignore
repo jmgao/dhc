@@ -1,5 +1,6 @@
 /build/i686
 /build/x86_64
+/dist
 /target
 **/*.rs.bk
 Cargo.lock
