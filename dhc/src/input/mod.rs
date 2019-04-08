@@ -376,6 +376,7 @@ impl RawInputManager {
     }
 
     let mut queue = self.event_queue.lock();
+    self.events_pending.fetch_add(events.len(), Ordering::SeqCst);
     queue.append(&mut events);
   }
 }
@@ -418,7 +419,9 @@ impl Context {
       let (tx, rx) = channel();
       let cmd = RawInputCommand::GetEvents(tx);
       self.eventloop.send_command(cmd);
-      rx.recv().unwrap()
+      let events = rx.recv().unwrap();
+      self.events_pending.fetch_sub(events.len(), Ordering::SeqCst);
+      events
     } else {
       VecDeque::new()
     }
