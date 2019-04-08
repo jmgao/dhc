@@ -357,12 +357,14 @@ impl RawInputManager {
 
     let mut events = VecDeque::new();
     for id in killed {
+      info!("XInputDevice({:?}) left", id);
       events.push_back(RawInputEvent::DeviceRemoved(DeviceId::XInput(id)));
       self.xinput_devices.remove(&id);
     }
 
     let default_inputs = DeviceInputs::default();
     for id in new {
+      info!("XInputDevice({:?}) arrived", id);
       let (write, read) = triple_buffer::TripleBuffer::new(default_inputs).split();
       let xinput_device = XInputDeviceState { buffer: write };
       self.xinput_devices.insert(id, xinput_device);
