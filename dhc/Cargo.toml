@@ -1,6 +1,6 @@
 [package]
 name = "dhc"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Josh Gao <josh@insolit.us>"]
 edition = "2018"
 
