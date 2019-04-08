@@ -15,6 +15,16 @@ after you start the game, you probably chose the wrong one. You can right click
 on the game in Task Manager and use properties to find the location of the
 actual binary.
 
+### Compatibility
+
+See the [wiki](https://github.com/jmgao/dhc/wiki/Compatibility) for a table of
+tested games and controllers.
+
+### Configuration
+
+On first launch, dhc will create a `dhc.toml` file in the same directory as
+`dhc.dll`, which you can edit with a text editor to change settings.
+
 ### Compiling
 
 dhc is implemented in both C++ and rust, so you'll need working toolchains for
@@ -62,3 +72,9 @@ The built DLLs will be copied into `dist/{i686, x86_64}`.
   in controllers showing up multiple times. To avoid this, either launch the
   game with no controllers connected, or disable Steam's controller support
   (View > Settings > Controller > General Controller Settings > uncheck everything).
+
+### Reporting bugs
+
+File a bug [here](https://github.com/jmgao/dhc/issues/new), with your `dhc.log`
+file attached. Make sure not to restart the game after noticing a crash, as the
+log file is deleted and recreated on every launch.
