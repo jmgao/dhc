@@ -245,20 +245,20 @@ impl HidParser {
 
     let value_caps = hid.get_value_caps()?;
     for (idx, value_cap) in value_caps.iter().enumerate() {
-      trace!("Value cap {}:", idx);
-      trace!("  UsagePage = {:#x}", value_cap.UsagePage);
-      trace!("  ReportID = {}", value_cap.ReportID);
-      trace!("  IsAlias = {}", value_cap.IsAlias);
-      trace!("  BitField = {}", value_cap.BitField);
-      trace!("  LinkCollection = {}", value_cap.LinkCollection);
-      trace!("  LinkUsage = {}", value_cap.LinkUsage);
-      trace!("  LinkUsagePage = {}", value_cap.LinkUsagePage);
-      trace!("  IsRange = {}", value_cap.IsRange);
-      trace!("  IsStringRange = {}", value_cap.IsStringRange);
-      trace!("  IsDesignatorRange = {}", value_cap.IsDesignatorRange);
+      debug!("Value cap {}:", idx);
+      debug!("  UsagePage = {:#x}", value_cap.UsagePage);
+      debug!("  ReportID = {}", value_cap.ReportID);
+      debug!("  IsAlias = {}", value_cap.IsAlias);
+      debug!("  BitField = {}", value_cap.BitField);
+      debug!("  LinkCollection = {}", value_cap.LinkCollection);
+      debug!("  LinkUsage = {}", value_cap.LinkUsage);
+      debug!("  LinkUsagePage = {}", value_cap.LinkUsagePage);
+      debug!("  IsRange = {}", value_cap.IsRange);
+      debug!("  IsStringRange = {}", value_cap.IsStringRange);
+      debug!("  IsDesignatorRange = {}", value_cap.IsDesignatorRange);
       if value_cap.IsRange == 0 {
         let cap = unsafe { value_cap.u.NotRange() };
-        trace!("  Usage = {:#x}", cap.Usage);
+        debug!("  Usage = {:#x}", cap.Usage);
       }
     }
 
