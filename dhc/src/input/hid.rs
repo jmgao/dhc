@@ -245,20 +245,20 @@ impl HidParser {
 
     let value_caps = hid.get_value_caps()?;
     for (idx, value_cap) in value_caps.iter().enumerate() {
-      info!("Value cap {}:", idx);
-      info!("  UsagePage = {:#x}", value_cap.UsagePage);
-      info!("  ReportID = {}", value_cap.ReportID);
-      info!("  IsAlias = {}", value_cap.IsAlias);
-      info!("  BitField = {}", value_cap.BitField);
-      info!("  LinkCollection = {}", value_cap.LinkCollection);
-      info!("  LinkUsage = {}", value_cap.LinkUsage);
-      info!("  LinkUsagePage = {}", value_cap.LinkUsagePage);
-      info!("  IsRange = {}", value_cap.IsRange);
-      info!("  IsStringRange = {}", value_cap.IsStringRange);
-      info!("  IsDesignatorRange = {}", value_cap.IsDesignatorRange);
+      trace!("Value cap {}:", idx);
+      trace!("  UsagePage = {:#x}", value_cap.UsagePage);
+      trace!("  ReportID = {}", value_cap.ReportID);
+      trace!("  IsAlias = {}", value_cap.IsAlias);
+      trace!("  BitField = {}", value_cap.BitField);
+      trace!("  LinkCollection = {}", value_cap.LinkCollection);
+      trace!("  LinkUsage = {}", value_cap.LinkUsage);
+      trace!("  LinkUsagePage = {}", value_cap.LinkUsagePage);
+      trace!("  IsRange = {}", value_cap.IsRange);
+      trace!("  IsStringRange = {}", value_cap.IsStringRange);
+      trace!("  IsDesignatorRange = {}", value_cap.IsDesignatorRange);
       if value_cap.IsRange == 0 {
         let cap = unsafe { value_cap.u.NotRange() };
-        info!("  Usage = {:#x}", cap.Usage);
+        trace!("  Usage = {:#x}", cap.Usage);
       }
     }
 
@@ -528,7 +528,6 @@ pub(crate) fn open_rawinput_device(
   let info = get_rawinput_device_info(device_id);
 
   let hid_path = get_rawinput_device_path(device_id);
-  info!("path = {:?}", hid_path);
   let is_xinput = is_xinput_device_path(&hid_path);
   let hid_file = open_rawinput_hid_device(hid_path)?;
   let device_name = get_rawinput_device_name(hid_file);
