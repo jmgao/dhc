@@ -17,6 +17,9 @@ pub struct Config {
 
   #[serde(default = "default_device_count")]
   pub device_count: usize,
+
+  #[serde(default = "default_xinput_enabled")]
+  pub xinput_enabled: bool,
 }
 
 fn default_console() -> bool {
@@ -31,12 +34,17 @@ fn default_device_count() -> usize {
   2
 }
 
+fn default_xinput_enabled() -> bool {
+  true
+}
+
 impl Default for Config {
   fn default() -> Config {
     Config {
       console: default_console(),
       log_level: default_log_level(),
       device_count: default_device_count(),
+      xinput_enabled: default_xinput_enabled(),
     }
   }
 }

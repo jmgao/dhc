@@ -31,16 +31,17 @@ lazy_static! {
     path.push("dhc.toml");
     Config::read(&path)
   };
-
   static ref CONTEXT: Context = {
-    let device_count = match *CONFIG {
-      Ok(ref config) => config.device_count,
-      Err(_) => Config::default().device_count,
+    let (device_count, xinput_enabled) = match *CONFIG {
+      Ok(ref config) => (config.device_count, config.xinput_enabled),
+      Err(_) => {
+        let default = Config::default();
+        (default.device_count, default.xinput_enabled)
+      }
     };
-    Context::new(device_count)
+    Context::new(device_count, xinput_enabled)
   };
 }
-
 
 fn get_executable_path() -> String {
   let process = unsafe { GetModuleHandleW(std::ptr::null_mut()) };
@@ -203,18 +204,20 @@ impl State {
 pub struct Context {
   input: input::Context,
   state: RwLock<State>,
-  device_count: usize
+  device_count: usize,
+  xinput_enabled: bool,
 }
 
 impl Context {
-  fn new(device_count: usize) -> Context {
+  fn new(device_count: usize, xinput_enabled: bool) -> Context {
     let ctx = input::Context::new();
     ctx.register_device_type(input::RawInputDeviceType::Joystick);
     ctx.register_device_type(input::RawInputDeviceType::GamePad);
     Context {
       input: ctx,
       state: RwLock::new(State::new(device_count)),
-      device_count: device_count,
+      device_count,
+      xinput_enabled,
     }
   }
 
@@ -224,6 +227,10 @@ impl Context {
 
   pub fn device_count(&self) -> usize {
     self.device_count
+  }
+
+  pub fn xinput_enabled(&self) -> bool {
+    self.xinput_enabled
   }
 
   pub fn device_state(&self, idx: usize) -> DeviceInputs {

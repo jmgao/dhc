@@ -24,6 +24,11 @@ pub extern "C" fn dhc_log_is_enabled(level: LogLevel) -> bool {
 }
 
 #[no_mangle]
+pub extern "C" fn dhc_xinput_is_enabled() -> bool {
+  Context::instance().xinput_enabled()
+}
+
+#[no_mangle]
 pub extern "C" fn dhc_update() {
   Context::instance().update();
 }
