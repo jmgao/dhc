@@ -127,7 +127,10 @@ impl RawInputDeviceState {
     for i in 0..count {
       let begin = (size * i) as isize;
       let slice = unsafe { std::slice::from_raw_parts(ptr.offset(begin), size) };
-      inputs = self.hid.parse(slice);
+      match self.hid.parse(slice) {
+        Ok(result) => inputs = result,
+        Err(err) => warn!("failed to read inputs: {:?}", err),
+      }
     }
 
     self.buffer.write(inputs);

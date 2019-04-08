@@ -7,7 +7,12 @@ use winapi::shared::hidpi::{
   HidP_MaxUsageListLength,
 };
 use winapi::shared::hidpi::{
-  HidP_Input, HIDP_STATUS_INCOMPATIBLE_REPORT_ID, HIDP_STATUS_SUCCESS, HIDP_STATUS_USAGE_NOT_FOUND,
+  HidP_Input, HIDP_STATUS_BAD_LOG_PHY_VALUES, HIDP_STATUS_BUFFER_TOO_SMALL, HIDP_STATUS_BUTTON_NOT_PRESSED,
+  HIDP_STATUS_DATA_INDEX_NOT_FOUND, HIDP_STATUS_DATA_INDEX_OUT_OF_RANGE, HIDP_STATUS_I8042_TRANS_UNKNOWN,
+  HIDP_STATUS_INCOMPATIBLE_REPORT_ID, HIDP_STATUS_INTERNAL_ERROR, HIDP_STATUS_INVALID_PREPARSED_DATA,
+  HIDP_STATUS_INVALID_REPORT_LENGTH, HIDP_STATUS_INVALID_REPORT_TYPE, HIDP_STATUS_IS_VALUE_ARRAY,
+  HIDP_STATUS_NOT_IMPLEMENTED, HIDP_STATUS_NOT_VALUE_ARRAY, HIDP_STATUS_NULL, HIDP_STATUS_REPORT_DOES_NOT_EXIST,
+  HIDP_STATUS_SUCCESS, HIDP_STATUS_USAGE_NOT_FOUND, HIDP_STATUS_VALUE_OUT_OF_RANGE,
 };
 use winapi::shared::hidpi::{HIDP_CAPS, HIDP_LINK_COLLECTION_NODE, HIDP_VALUE_CAPS, PHIDP_PREPARSED_DATA};
 use winapi::shared::hidsdi::{
@@ -15,7 +20,7 @@ use winapi::shared::hidsdi::{
   HidD_GetSerialNumberString,
 };
 use winapi::shared::minwindef::UINT;
-use winapi::shared::ntdef::HANDLE;
+use winapi::shared::ntdef::{HANDLE, NTSTATUS};
 use winapi::um::fileapi::{CreateFileA, OPEN_EXISTING};
 use winapi::um::handleapi::CloseHandle;
 use winapi::um::handleapi::INVALID_HANDLE_VALUE;
@@ -51,6 +56,87 @@ impl Drop for HidPreparsedData {
   }
 }
 
+#[derive(Debug)]
+pub enum HidPError {
+  BadLogPhyValues,
+  BufferTooSmall,
+  ButtonNotPressed,
+  DataIndexNotFound,
+  DataIndexOutOfRange,
+  I8042TransUnknown,
+  IncompatibleReportId,
+  InternalError,
+  InvalidPreparsedData,
+  InvalidReportLength,
+  InvalidReportType,
+  IsValueArray,
+  NotImplemented,
+  NotValueArray,
+  Null,
+  ReportDoesNotExist,
+  Success,
+  UsageNotFound,
+  ValueOutOfRange,
+  Unknown(NTSTATUS),
+}
+
+impl HidPError {
+  fn from_code(code: NTSTATUS) -> HidPError {
+    match code {
+      HIDP_STATUS_BAD_LOG_PHY_VALUES => HidPError::BadLogPhyValues,
+      HIDP_STATUS_BUFFER_TOO_SMALL => HidPError::BufferTooSmall,
+      HIDP_STATUS_BUTTON_NOT_PRESSED => HidPError::ButtonNotPressed,
+      HIDP_STATUS_DATA_INDEX_NOT_FOUND => HidPError::DataIndexNotFound,
+      HIDP_STATUS_DATA_INDEX_OUT_OF_RANGE => HidPError::DataIndexOutOfRange,
+      HIDP_STATUS_I8042_TRANS_UNKNOWN => HidPError::I8042TransUnknown,
+      HIDP_STATUS_INCOMPATIBLE_REPORT_ID => HidPError::IncompatibleReportId,
+      HIDP_STATUS_INTERNAL_ERROR => HidPError::InternalError,
+      HIDP_STATUS_INVALID_PREPARSED_DATA => HidPError::InvalidPreparsedData,
+      HIDP_STATUS_INVALID_REPORT_LENGTH => HidPError::InvalidReportLength,
+      HIDP_STATUS_INVALID_REPORT_TYPE => HidPError::InvalidReportType,
+      HIDP_STATUS_IS_VALUE_ARRAY => HidPError::IsValueArray,
+      HIDP_STATUS_NOT_IMPLEMENTED => HidPError::NotImplemented,
+      HIDP_STATUS_NOT_VALUE_ARRAY => HidPError::NotValueArray,
+      HIDP_STATUS_NULL => HidPError::Null,
+      HIDP_STATUS_REPORT_DOES_NOT_EXIST => HidPError::ReportDoesNotExist,
+      HIDP_STATUS_SUCCESS => HidPError::Success,
+      HIDP_STATUS_USAGE_NOT_FOUND => HidPError::UsageNotFound,
+      HIDP_STATUS_VALUE_OUT_OF_RANGE => HidPError::ValueOutOfRange,
+      _ => HidPError::Unknown(code),
+    }
+  }
+}
+
+impl std::fmt::Display for HidPError {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    write!(f, "{:?}", self)
+  }
+}
+
+impl std::error::Error for HidPError {
+  fn description(&self) -> &str {
+    "HID error"
+  }
+
+  fn cause(&self) -> Option<&std::error::Error> {
+    None
+  }
+}
+
+impl From<HidPError> for std::io::Error {
+  fn from(err: HidPError) -> Self {
+    std::io::Error::new(std::io::ErrorKind::Other, err)
+  }
+}
+
+fn hidp_result(status: NTSTATUS) -> Result<(), HidPError> {
+  if status == HIDP_STATUS_SUCCESS {
+    Ok(())
+  } else {
+    Err(HidPError::from_code(status))
+  }
+}
+
 impl HidPreparsedData {
   pub fn new(data: PHIDP_PREPARSED_DATA) -> HidPreparsedData {
     HidPreparsedData { ptr: data }
@@ -60,45 +146,49 @@ impl HidPreparsedData {
     self.ptr
   }
 
-  fn get_caps(&self) -> HIDP_CAPS {
+  fn get_caps(&self) -> Result<HIDP_CAPS, HidPError> {
     let mut caps = unsafe { std::mem::uninitialized() };
     let rc = unsafe { HidP_GetCaps(self.raw(), &mut caps) };
-    assert_eq!(HIDP_STATUS_SUCCESS, rc);
-    caps
+    let result = hidp_result(rc);
+    result.and(Ok(caps))
   }
 
-  fn get_value_caps(&self) -> Vec<HIDP_VALUE_CAPS> {
-    let caps = self.get_caps();
+  fn get_value_caps(&self) -> Result<Vec<HIDP_VALUE_CAPS>, HidPError> {
+    let caps = self.get_caps()?;
     let mut vec = Vec::with_capacity(caps.NumberInputValueCaps as usize);
     unsafe {
       let mut len = caps.NumberInputValueCaps;
       let rc = HidP_GetValueCaps(HidP_Input, vec.as_mut_ptr(), &mut len, self.raw());
-      assert_eq!(HIDP_STATUS_SUCCESS, rc);
-      vec.set_len(len as usize);
+      let result = hidp_result(rc);
+      result.and(Ok({
+        vec.set_len(len as usize);
+        vec
+      }))
     }
-    vec
   }
 
   #[allow(dead_code)]
-  fn get_link_collection_nodes(&self) -> Vec<HIDP_LINK_COLLECTION_NODE> {
-    let mut result = Vec::with_capacity(128);
+  fn get_link_collection_nodes(&self) -> Result<Vec<HIDP_LINK_COLLECTION_NODE>, HidPError> {
+    let mut vec = Vec::with_capacity(128);
     unsafe {
-      let mut size = result.capacity() as u32;
-      let rc = HidP_GetLinkCollectionNodes(result.as_mut_ptr(), &mut size, self.raw());
-      assert_eq!(HIDP_STATUS_SUCCESS, rc);
-      result.set_len(size as usize);
+      let mut len = vec.capacity() as u32;
+      let rc = HidP_GetLinkCollectionNodes(vec.as_mut_ptr(), &mut len, self.raw());
+      let result = hidp_result(rc);
+      result.and(Ok({
+        vec.set_len(len as usize);
+        vec
+      }))
     }
-    result
   }
 
   pub fn get_button_count(&self) -> usize {
     unsafe { HidP_MaxUsageListLength(HidP_Input, USAGE_PAGE_BUTTON, self.raw()) as usize }
   }
 
-  fn get_buttons(&self, data: &[u8]) -> [u16; MAX_BUTTONS] {
+  fn get_buttons(&self, data: &[u8]) -> Result<[u16; MAX_BUTTONS], HidPError> {
     let mut buttons = [0u16; MAX_BUTTONS];
     let mut size = buttons.len() as u32;
-    let result = unsafe {
+    let rc = unsafe {
       HidP_GetUsages(
         HidP_Input,
         USAGE_PAGE_BUTTON,
@@ -111,11 +201,10 @@ impl HidPreparsedData {
       )
     };
 
-    assert_eq!(HIDP_STATUS_SUCCESS, result);
-    buttons
+    hidp_result(rc).and(Ok(buttons))
   }
 
-  fn get_usage_value(&self, data: &[u8], usage_page: u16, usage: u16) -> i32 {
+  fn get_usage_value(&self, data: &[u8], usage_page: u16, usage: u16) -> Result<i32, HidPError> {
     let mut result = 0;
     let rc = unsafe {
       HidP_GetUsageValue(
@@ -130,10 +219,7 @@ impl HidPreparsedData {
       )
     };
 
-    assert_ne!(rc, HIDP_STATUS_INCOMPATIBLE_REPORT_ID);
-    assert_ne!(rc, HIDP_STATUS_USAGE_NOT_FOUND);
-    assert_eq!(rc, HIDP_STATUS_SUCCESS);
-    result as i32
+    hidp_result(rc).and(Ok(result as i32))
   }
 }
 
@@ -148,7 +234,7 @@ pub struct HidParser {
 }
 
 impl HidParser {
-  fn new(hid: HidPreparsedData) -> HidParser {
+  fn new(hid: HidPreparsedData) -> Result<HidParser, HidPError> {
     let mut device_type = DeviceType::Generic;
 
     if hid.get_button_count() == 14 {
@@ -157,7 +243,7 @@ impl HidParser {
       device_type = DeviceType::PS3;
     }
 
-    let value_caps = hid.get_value_caps();
+    let value_caps = hid.get_value_caps()?;
     for (idx, value_cap) in value_caps.iter().enumerate() {
       info!("Value cap {}:", idx);
       info!("  UsagePage = {:#x}", value_cap.UsagePage);
@@ -176,23 +262,23 @@ impl HidParser {
       }
     }
 
-    HidParser {
+    Ok(HidParser {
       hid,
       device_type,
       value_caps,
-    }
+    })
   }
 
-  fn new_xinput(hid: HidPreparsedData) -> HidParser {
-    let value_caps = hid.get_value_caps();
-    HidParser {
+  fn new_xinput(hid: HidPreparsedData) -> Result<HidParser, HidPError> {
+    let value_caps = hid.get_value_caps()?;
+    Ok(HidParser {
       hid,
       device_type: DeviceType::XInput,
       value_caps,
-    }
+    })
   }
 
-  pub fn parse(&self, data: &[u8]) -> DeviceInputs {
+  pub fn parse(&self, data: &[u8]) -> Result<DeviceInputs, HidPError> {
     match self.device_type {
       DeviceType::PS4 => self.parse_ps4(data),
 
@@ -212,10 +298,10 @@ impl HidParser {
     }
   }
 
-  pub fn parse_ps4(&self, data: &[u8]) -> DeviceInputs {
+  pub fn parse_ps4(&self, data: &[u8]) -> Result<DeviceInputs, HidPError> {
     let mut result = DeviceInputs::default();
 
-    let buttons = self.hid.get_buttons(data);
+    let buttons = self.hid.get_buttons(data)?;
     for button in &buttons {
       match button {
         0 => break,
@@ -242,7 +328,7 @@ impl HidParser {
       let logical_max = value_cap.LogicalMax;
 
       let usage = unsafe { value_cap.u.NotRange().Usage };
-      let value = self.hid.get_usage_value(data, value_cap.UsagePage, usage);
+      let value = self.hid.get_usage_value(data, value_cap.UsagePage, usage)?;
 
       let unlerped = unlerp(value, logical_min, logical_max);
       match usage {
@@ -271,70 +357,7 @@ impl HidParser {
       }
     }
 
-    result
-  }
-
-  // TODO: Delete?
-  #[allow(dead_code)]
-  fn parse_xinput(&self, data: &[u8]) -> DeviceInputs {
-    let mut result = DeviceInputs::default();
-
-    let buttons = self.hid.get_buttons(data);
-    for button in &buttons {
-      match button {
-        0 => break,
-        1 => result.button_south.set(),
-        2 => result.button_east.set(),
-        3 => result.button_west.set(),
-        4 => result.button_north.set(),
-        5 => result.button_l1.set(),
-        6 => result.button_r1.set(),
-        7 => result.button_select.set(),
-        8 => result.button_start.set(),
-        9 => result.button_l3.set(),
-        10 => result.button_r3.set(),
-        _ => {}
-      }
-    }
-
-    for value_cap in &self.value_caps {
-      let logical_min = value_cap.LogicalMin;
-      let mut logical_max = value_cap.LogicalMax;
-
-      if logical_max == -1 {
-        logical_max = 65535
-      }
-
-      let usage = unsafe { value_cap.u.NotRange().Usage };
-      let value = self.hid.get_usage_value(data, value_cap.UsagePage, usage);
-
-      let unlerped = unlerp(value, logical_min, logical_max);
-      match usage {
-        USAGE_X => result.axis_left_stick_x.set_value(unlerped),
-        USAGE_Y => result.axis_left_stick_y.set_value(unlerped),
-        USAGE_RX => result.axis_right_stick_x.set_value(unlerped),
-        USAGE_RY => result.axis_right_stick_y.set_value(unlerped),
-        USAGE_HAT => {
-          let direction = match value {
-            0 => Hat::North,
-            1 => Hat::NorthEast,
-            2 => Hat::East,
-            3 => Hat::SouthEast,
-            4 => Hat::South,
-            5 => Hat::SouthWest,
-            6 => Hat::West,
-            7 => Hat::NorthWest,
-            _ => Hat::Neutral,
-          };
-          result.hat_dpad = direction;
-        }
-
-        _ => {}
-      }
-    }
-
-    // TODO: Figure out how to parse L2/R2.
-    result
+    Ok(result)
   }
 }
 
@@ -518,7 +541,7 @@ pub(crate) fn open_rawinput_device(
     HidParser::new_xinput(preparsed_data)
   } else {
     HidParser::new(preparsed_data)
-  };
+  }?;
 
   let device_type = hid_parser.device_type;
 
