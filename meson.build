@@ -61,16 +61,28 @@ dhc = custom_target(
   console: true,
   output: ['dhc.dll'],
   input: ['dhc/Cargo.toml'],
-  command : [cargo_script, target_machine.cpu_family(), '@INPUT@', '@OUTPUT0@'],
+  command: [cargo_script, target_machine.cpu_family(), '@INPUT@', '@OUTPUT@'],
   install: true,
   install_dir: dist_dir,
 )
+
+cbindgen_script = find_program('build/cbindgen.sh')
+dhc_h = custom_target(
+  'dhc.h',
+  output: ['dhc.h'],
+  build_by_default: true,
+  build_always_stale: true,
+  input: ['dhc/Cargo.toml'],
+  command: [cbindgen_script, '@INPUT@', '@OUTPUT@'],
+)
+
+include_dir = include_directories('include')
 
 dinput8 = shared_library(
   'dinput8',
   name_prefix: '',
 
-  include_directories: 'dhc/include',
+  include_directories: ['dhc/include', include_dir],
   link_args: [dhc.full_path()],
   link_depends: dhc,
 
@@ -78,6 +90,7 @@ dinput8 = shared_library(
     'dinput8/dinput.cpp',
     'dinput8/ps4.cpp',
     'dinput8/utils.cpp',
+    dhc_h,
   ],
   vs_module_defs: 'dinput8/dinput8.def',
 
@@ -89,12 +102,13 @@ xinput1_3 = shared_library(
   'xinput1_3',
   name_prefix: '',
 
-  include_directories: 'dhc/include',
+  include_directories: ['dhc/include', include_dir],
   link_args: [dhc.full_path()],
   link_depends: dhc,
 
   sources: [
     'xinput1_3/xinput1_3.cpp',
+    dhc_h,
   ],
   vs_module_defs: 'xinput1_3/xinput1_3.def',
 

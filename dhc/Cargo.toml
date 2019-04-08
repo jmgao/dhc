@@ -5,7 +5,6 @@ authors = ["Josh Gao <josh@insolit.us>"]
 edition = "2018"
 
 [build-dependencies]
-cbindgen = "0.8.3"
 vergen = "3.0.4"
 
 [dependencies]
