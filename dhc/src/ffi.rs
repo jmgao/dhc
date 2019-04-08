@@ -1,28 +1,6 @@
 use crate::*;
 
-#[repr(C)]
-#[derive(Copy, Clone, PartialEq)]
-pub enum LogLevel {
-  Trace,
-  Debug,
-  Info,
-  Warn,
-  Error,
-  Fatal,
-}
-
-impl LogLevel {
-  fn to_log(self) -> log::Level {
-    match self {
-      LogLevel::Trace => log::Level::Trace,
-      LogLevel::Debug => log::Level::Debug,
-      LogLevel::Info => log::Level::Info,
-      LogLevel::Warn => log::Level::Warn,
-      LogLevel::Error => log::Level::Error,
-      LogLevel::Fatal => log::Level::Error,
-    }
-  }
-}
+use crate::logger::LogLevel;
 
 #[no_mangle]
 pub extern "C" fn dhc_init() {

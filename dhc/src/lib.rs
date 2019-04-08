@@ -1,14 +1,16 @@
 #[macro_use]
 extern crate log;
-extern crate pretty_env_logger;
 
 #[macro_use]
 extern crate lazy_static;
 
 extern crate winapi;
-use winapi::um::consoleapi::AllocConsole;
+use winapi::shared::minwindef::MAX_PATH;
+use winapi::um::libloaderapi::{GetModuleFileNameW, GetModuleHandleW};
 
 use parking_lot::{Once, ONCE_INIT};
+
+use std::path::PathBuf;
 use std::sync::RwLock;
 
 pub mod ffi;
@@ -23,19 +25,35 @@ pub use input::types::*;
 
 static ONCE: Once = ONCE_INIT;
 
+fn get_executable_path() -> String {
+  let process = unsafe { GetModuleHandleW(std::ptr::null_mut()) };
+  let mut path = Vec::with_capacity(MAX_PATH);
+  unsafe {
+    let len = GetModuleFileNameW(process, path.as_mut_ptr(), MAX_PATH as u32);
+    assert!(len > 0);
+    path.set_len(len as usize);
+  }
+  String::from_utf16(&path).expect("executable path isn't UTF-16?")
+}
+
 pub fn init() {
   ONCE.call_once(|| {
     Context::instance();
 
-    unsafe { AllocConsole() };
-    if std::env::var("RUST_LOG").is_err() {
-      std::env::set_var("RUST_LOG", "info");
-    }
+    let mut path = PathBuf::from(get_executable_path());
+    path.pop();
+    path.push("dhc.toml");
 
-    pretty_env_logger::init();
-    log_panics::init();
+    let config = Config::read(&path);
+    logger::init(config.as_ref().ok());
 
     info!("dhc v{} initialized", env!("CARGO_PKG_VERSION"));
+
+    // We need to wait until the logger has been initialized to warn about this.
+    if let Err(error) = config {
+      warn!("failed to read config: {}", error);
+      warn!("falling back to default configuration");
+    }
   });
 }
 

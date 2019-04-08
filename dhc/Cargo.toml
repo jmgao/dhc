@@ -9,13 +9,21 @@ cbindgen = "0.8.3"
 
 [dependencies]
 log = "0.4.6"
-pretty_env_logger = "0.2.5"
+slog = "2.4.1"
+slog-scope = "4.1.1"
+slog-stdlog = "3.0.2"
+slog-stream = "1.2.1"
+slog-term = "2.4.0"
+
 log-panics = "2.0.0"
 
 lazy_static = "1.2.0"
 parking_lot = { version = "0.7" }
 triple_buffer = "4.0.1"
 twoway = "0.2.0"
+
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.4"
 
 winapi = { version = "0.3", features = ["winuser", "handleapi", "hidpi", "hidsdi"] }
 hwndloop = "0.1.5"
