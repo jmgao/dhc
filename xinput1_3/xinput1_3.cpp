@@ -3,6 +3,7 @@
 // Hopefully, Microsoft maintained ABI compatibility between versions...
 #include <xinput.h>
 
+#include "dhc/dhc.h"
 #include "dhc/logging.h"
 
 extern "C" {
@@ -21,33 +22,48 @@ BOOL WINAPI DllMain(HMODULE module, DWORD reason, void*) {
   return TRUE;
 }
 
+static bool init() {
+  static bool initialized = []() {
+    dhc_init();
+    return true;
+  }();
+  return initialized;
+}
+
 DWORD WINAPI XInputGetState(DWORD user_index, XINPUT_STATE* state) {
+  init();
   return ERROR_DEVICE_NOT_CONNECTED;
 }
 
 DWORD WINAPI XInputSetState(DWORD user_index, XINPUT_VIBRATION* vibration) {
+  init();
   return ERROR_DEVICE_NOT_CONNECTED;
 }
 
 DWORD WINAPI XInputGetCapabilities(DWORD user_index, DWORD flags,
                                    XINPUT_CAPABILITIES* capabilities) {
+  init();
   return ERROR_DEVICE_NOT_CONNECTED;
 }
 
 void WINAPI XInputEnable(BOOL enable) {
+  init();
 }
 
 DWORD WINAPI XInputGetDSoundAudioDeviceGuids(DWORD user_index, GUID* render_guid,
                                              GUID* capture_guid) {
+  init();
   return ERROR_DEVICE_NOT_CONNECTED;
 }
 
 DWORD WINAPI XInputGetBatteryInformation(DWORD user_index, BYTE dev_type,
                                          XINPUT_BATTERY_INFORMATION* battery_information) {
+  init();
   return ERROR_DEVICE_NOT_CONNECTED;
 }
 
 DWORD WINAPI XInputGetKeystroke(DWORD user_index, DWORD reserved, XINPUT_KEYSTROKE* keystroke) {
+  init();
   return ERROR_DEVICE_NOT_CONNECTED;
 }
 
