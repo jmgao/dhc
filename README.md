@@ -2,8 +2,8 @@
 
 dhc is a DirectInput/XInput wrapper DLL that implements controller hotplugging
 for games that don't do so themselves. It pretends that there are always a
-configurable number of PS4 controllers plugged in at a time, and maps the
-inputs of real controllers onto them.
+fixed number of PS4 controllers plugged in at once, and maps the inputs of real
+controllers onto the virtual controllers as they are plugged in.
 
 ### Installation
 
