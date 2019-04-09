@@ -6,6 +6,7 @@ edition = "2018"
 
 description = "XInput/rawinput abstraction library for Win32"
 homepage = "https://github.com/jmgao/dhc"
+documentation = "https://docs.rs/dhc"
 repository = "https://github.com/jmgao/dhc"
 readme = "../README.md"
 keywords = ["xinput", "rawinput", "directinput", "win32"]
