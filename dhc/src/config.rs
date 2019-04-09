@@ -35,7 +35,7 @@ fn default_device_count() -> usize {
 }
 
 fn default_xinput_enabled() -> bool {
-  true
+  false
 }
 
 impl Default for Config {
