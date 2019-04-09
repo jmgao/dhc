@@ -1,4 +1,4 @@
 [submodule "rusty-xinput"]
 	path = rusty-xinput
 	url = https://github.com/jmgao/rusty-xinput.git
-	branch = v2
+	branch = master

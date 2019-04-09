@@ -27,7 +27,7 @@ toml = "0.4"
 
 winapi = { version = "0.3", features = ["winuser", "handleapi", "hidpi", "hidsdi"] }
 hwndloop = "0.1.5"
-rusty-xinput = { path = "../rusty-xinput" }
+rusty-xinput = { version = "1.2.0", path = "../rusty-xinput" }
 
 [lib]
 crate-type = ["rlib", "cdylib"]
