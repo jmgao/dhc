@@ -254,7 +254,8 @@ impl RawInputManager {
     };
 
     if result == -1i32 as u32 {
-      panic!("GetRawInputData failed to get raw input data");
+      error!("GetRawInputData failed to get raw input data");
+      return;
     }
 
     let rawinput = unsafe { *(&buffer as *const AlignedBuffer as *const RAWINPUT) };
