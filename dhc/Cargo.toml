@@ -4,6 +4,18 @@ version = "0.1.1"
 authors = ["Josh Gao <josh@insolit.us>"]
 edition = "2018"
 
+description = "XInput/rawinput abstraction library for Win32"
+homepage = "https://github.com/jmgao/dhc"
+repository = "https://github.com/jmgao/dhc"
+readme = "../README.md"
+keywords = ["xinput", "rawinput", "directinput", "win32"]
+categories = ["game-engines", "os::windows-apis"]
+license = "Apache-2.0"
+
+[badges]
+circle-ci = { repository = "jmgao/hwndloop" }
+maintenance = { status = "actively-developed" }
+
 [build-dependencies]
 vergen = "3.0.4"
 
