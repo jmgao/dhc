@@ -36,7 +36,7 @@ triple_buffer = "4.0.1"
 twoway = "0.2.0"
 
 serde = { version = "1.0", features = ["derive"] }
-toml = "0.4"
+toml = "0.5"
 
 winapi = { version = "0.3", features = ["winuser", "handleapi", "hidpi", "hidsdi"] }
 hwndloop = "0.1.5"
