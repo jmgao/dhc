@@ -450,8 +450,9 @@ fn hid_get_serial_number(handle: HANDLE) -> Option<String> {
     None
   } else {
     info!("HidD_GetSerialNumberString succeeded");
+    let u16_slice = unsafe { std::slice::from_raw_parts(buf.as_ptr() as *const u16, buf.len() / 2) };
     Some(
-      String::from_utf8_lossy(&buf)
+      String::from_utf16_lossy(u16_slice)
         .trim_end_matches(char::from(0))
         .to_string(),
     )
