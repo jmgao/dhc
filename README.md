@@ -1,4 +1,7 @@
-## dhc
+dhc
+========
+
+[![CircleCI](https://circleci.com/gh/jmgao/dhc.svg?style=svg)](https://circleci.com/gh/jmgao/dhc) [![Docs](https://docs.rs/dhc/badge.svg)](https://docs.rs/dhc)
 
 dhc is a DirectInput/XInput wrapper DLL that implements controller hotplugging
 for games that don't do so themselves. It pretends that there are always a
