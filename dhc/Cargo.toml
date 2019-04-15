@@ -32,7 +32,7 @@ log-panics = "2.0.0"
 
 lazy_static = "1.2.0"
 parking_lot = { version = "0.7" }
-triple_buffer = "4.0.1"
+triple_buffer = "5.0.0"
 twoway = "0.2.0"
 
 serde = { version = "1.0", features = ["derive"] }
