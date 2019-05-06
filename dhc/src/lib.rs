@@ -8,7 +8,7 @@ extern crate winapi;
 use winapi::shared::minwindef::MAX_PATH;
 use winapi::um::libloaderapi::{GetModuleFileNameW, GetModuleHandleW};
 
-use parking_lot::{Once, ONCE_INIT};
+use parking_lot::Once;
 
 use std::path::PathBuf;
 use std::sync::RwLock;
@@ -23,7 +23,8 @@ mod logger;
 mod input;
 pub use input::types::*;
 
-static ONCE: Once = ONCE_INIT;
+static ONCE: Once = Once::new();
+
 lazy_static! {
   static ref CONFIG: std::io::Result<Config> = {
     let mut path = PathBuf::from(get_executable_path());
