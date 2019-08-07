@@ -94,8 +94,13 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
                                                 void* callback_arg, DWORD flags) override final {
     LOG(DEBUG) << "DirectInput8::EnumDevices";
 
+    if ((flags & DIEDFL_FORCEFEEDBACK)) {
+      return 0;
+    }
+
     // Assumed behavior.
-    flags &= ~DIEDFL_ATTACHEDONLY;
+    flags &= ~(DIEDFL_ATTACHEDONLY | DIEDFL_FORCEFEEDBACK | DIEDFL_INCLUDEALIASES | DIEDFL_INCLUDEHIDDEN |
+               DIEDFL_INCLUDEPHANTOMS);
 
     if (flags != 0) {
       LOG(FATAL) << "DirectInput8::EnumDevices received unhandled flags " << flags;
@@ -138,16 +143,12 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
     }
 
     if (enum_sticks) {
-      for (auto& guid : {GUID_DHC_P1, GUID_DHC_P2}) {
-        DI8DeviceInstance<CharType> dev = {};
-        dev.dwSize = sizeof(dev);
-        dev.guidInstance = guid;
-        dev.guidProduct = guid;
-        dev.dwDevType = DI8DEVTYPE_GAMEPAD | (DI8DEVTYPEGAMEPAD_STANDARD << 8);
-        char player = guid.Data4[7];
-        const char* name = (player == 1) ? "DHC P1" : "DHC P2";
-        tstrncpy(dev.tszInstanceName, name, MAX_PATH);
-        tstrncpy(dev.tszProductName, name, MAX_PATH);
+      DI8DeviceInstance<CharType> dev = {};
+      dev.dwSize = sizeof(dev);
+      for (auto& device : {&p1_, &p2_}) {
+        if (device->get()->GetDeviceInfo(&dev) != DI_OK) {
+          LOG(FATAL) << "GetDeviceInfo returned failure";
+        }
 
         if (callback(&dev, callback_arg) == DIENUM_STOP) {
           return DI_OK;
@@ -320,8 +321,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return "<unknown>";
   }
 
-  virtual HRESULT STDMETHODCALLTYPE GetProperty(REFGUID, DIPROPHEADER*) override final {
-    UNIMPLEMENTED(FATAL);
+  virtual HRESULT STDMETHODCALLTYPE GetProperty(REFGUID guid, DIPROPHEADER*) override final {
+    UNIMPLEMENTED(FATAL) << "GetProperty(" << GetDIPropName(guid) << ") unimplemented";
     return DIERR_NOTINITIALIZED;
   }
 
@@ -582,9 +583,33 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return DIERR_NOTINITIALIZED;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE GetDeviceInfo(DI8DeviceInstance<CharType>*) override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+  virtual HRESULT STDMETHODCALLTYPE GetDeviceInfo(DI8DeviceInstance<CharType>* device_instance) override final {
+    LOG(VERBOSE) << "EmulatedDirectInput8Device::GetDeviceInfo";
+
+    if (device_instance->dwSize != sizeof(*device_instance)) {
+      return DIERR_INVALIDPARAM;
+    }
+
+    memset(device_instance, 0, device_instance->dwSize);
+    device_instance->dwSize = sizeof(*device_instance);
+    device_instance->dwDevType = DI8DEVTYPE_GAMEPAD | (DI8DEVTYPEGAMEPAD_STANDARD << 8);
+
+    // TODO: Generalize to arbitrary number of devices.
+    const char* name = nullptr;
+    if (this->vdev_ == 0) {
+      device_instance->guidInstance = GUID_DHC_P1;
+      device_instance->guidProduct = GUID_DHC_P1;
+      name = "DHC P1";
+    } else if (this->vdev_ == 1) {
+      device_instance->guidInstance = GUID_DHC_P2;
+      device_instance->guidProduct = GUID_DHC_P2;
+      name = "DHC P2";
+    } else {
+      LOG(FATAL) << "P3+ unimplemented";
+    }
+    tstrncpy(device_instance->tszInstanceName, name, MAX_PATH);
+    tstrncpy(device_instance->tszProductName, name, MAX_PATH);
+    return DI_OK;
   }
 
   virtual HRESULT STDMETHODCALLTYPE RunControlPanel(HWND, DWORD) override final {
