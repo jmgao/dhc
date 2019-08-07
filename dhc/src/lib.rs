@@ -262,3 +262,28 @@ impl Context {
     state.update();
   }
 }
+
+pub(crate) fn mangle_inputs(inputs: &mut DeviceInputs) {
+  if let Some(deadzone_config) = &CONFIG.deadzone {
+    if deadzone_config.enabled {
+      for ref mut axis in &mut [&mut inputs.axis_left_stick_x, &mut inputs.axis_left_stick_y] {
+        let value = axis.get();
+        // For convenience, interpolate from [0, 1] to [-1, 1], perform the
+        // deadzone operations, and then interpolate back.
+        let (sign, magnitude) = if value > 0.5 {
+          (1.0, (value - 0.5) * 2.0)
+        } else {
+          (-1.0, (0.5 - value) * 2.0)
+        };
+
+        let magnitude = if magnitude > deadzone_config.threshold {
+          1.0
+        } else {
+          0.0
+        };
+
+        axis.set_value(0.5 + 0.5 * sign * magnitude);
+      }
+    }
+  }
+}

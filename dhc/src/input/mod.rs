@@ -136,6 +136,7 @@ impl RawInputDeviceState {
       }
     }
 
+    crate::mangle_inputs(&mut inputs);
     self.buffer.write(inputs);
   }
 }

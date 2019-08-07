@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::logger;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Config {
   #[serde(default = "default_console")]
   pub console: bool,
@@ -20,6 +20,14 @@ pub struct Config {
 
   #[serde(default = "default_xinput_enabled")]
   pub xinput_enabled: bool,
+
+  pub deadzone: Option<DeadzoneConfig>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct DeadzoneConfig {
+  pub enabled: bool,
+  pub threshold: f32,
 }
 
 fn default_console() -> bool {
@@ -45,6 +53,10 @@ impl Default for Config {
       log_level: default_log_level(),
       device_count: default_device_count(),
       xinput_enabled: default_xinput_enabled(),
+      deadzone: Some(DeadzoneConfig {
+        enabled: false,
+        threshold: 0.5,
+      }),
     }
   }
 }
