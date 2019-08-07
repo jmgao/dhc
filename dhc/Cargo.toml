@@ -1,7 +1,7 @@
 [package]
 name = "dhc"
 version = "0.2.0"
-authors = ["Josh Gao <josh@insolit.us>"]
+authors = ["Josh Gao <josh@jmgao.dev>"]
 edition = "2018"
 
 description = "XInput/rawinput abstraction library for Win32"
