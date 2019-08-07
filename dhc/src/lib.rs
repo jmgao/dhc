@@ -26,21 +26,22 @@ pub use input::types::*;
 static ONCE: Once = Once::new();
 
 lazy_static! {
-  static ref CONFIG: std::io::Result<Config> = {
+  static ref CONFIG_RESULT: std::io::Result<Config> = {
     let mut path = PathBuf::from(get_executable_path());
     path.pop();
     path.push("dhc.toml");
     Config::read(&path)
   };
+
+  static ref CONFIG: Config = {
+    match *CONFIG_RESULT {
+      Ok(ref cfg) => cfg.clone(),
+      Err(_) => Config::default(),
+    }
+  };
+
   static ref CONTEXT: Context = {
-    let (device_count, xinput_enabled) = match *CONFIG {
-      Ok(ref config) => (config.device_count, config.xinput_enabled),
-      Err(_) => {
-        let default = Config::default();
-        (default.device_count, default.xinput_enabled)
-      }
-    };
-    Context::new(device_count, xinput_enabled)
+    Context::new(CONFIG.device_count, CONFIG.xinput_enabled)
   };
 }
 
@@ -57,7 +58,7 @@ fn get_executable_path() -> String {
 
 pub fn init() {
   ONCE.call_once(|| {
-    logger::init(CONFIG.as_ref().ok());
+    logger::init(Some(&CONFIG));
 
     info!(
       "dhc v{}-{} ({}) initialized",
@@ -67,7 +68,7 @@ pub fn init() {
     );
 
     // We need to wait until the logger has been initialized to warn about this.
-    if let Err(ref error) = *CONFIG {
+    if let Err(ref error) = *CONFIG_RESULT {
       warn!("failed to read config: {}", error);
       warn!("falling back to default configuration");
     }
