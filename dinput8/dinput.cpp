@@ -21,6 +21,22 @@ namespace dhc {
 template <typename CharType>
 class EmulatedDirectInputDevice8;
 
+// Helpers for GetProperty/SetProperty.
+#define DEVICE_PROPERTY(name)                                                                 \
+  do {                                                                                        \
+    if (prop_header->dwHow != DIPH_DEVICE) {                                                  \
+      LOG(WARNING) << "SetProperty(" << #name << ") called with invalid dwHow"; \
+      return DIERR_INVALIDPARAM;                                                              \
+    }                                                                                         \
+  } while (0)
+
+#define UNIMPLEMENTED_DEVICE_PROPERTY(name)         \
+  do {                                              \
+    DEVICE_PROPERTY(name);                          \
+    UNIMPLEMENTED(FATAL) << #name " unimplemented"; \
+  } while (0)
+
+
 // TODO: If a process uses both ASCII and Unicode interfaces, should they share state?
 template <typename CharType>
 class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
@@ -358,20 +374,6 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     // Several properties are device-wide:
     //    DIPROP_AUTOCENTER, DIPROP_AXISMODE, DIPROP_BUFFERSIZE, DIPROP_FFGAIN,
     //    DIPROP_INSTANCENAME, DIPROP_PRODUCTNAME
-#define DEVICE_PROPERTY(name)                                                                 \
-  do {                                                                                        \
-    if (prop_header->dwHow != DIPH_DEVICE) {                                                  \
-      LOG(WARNING) << "SetProperty(" << #name << ") called with invalid dwHow"; \
-      return DIERR_INVALIDPARAM;                                                              \
-    }                                                                                         \
-  } while (0)
-
-#define UNIMPLEMENTED_DEVICE_PROPERTY(name)         \
-  do {                                              \
-    DEVICE_PROPERTY(name);                          \
-    UNIMPLEMENTED(FATAL) << #name " unimplemented"; \
-  } while (0)
-
     if (&guid == &DIPROP_AUTOCENTER) {
       UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_AUTOCENTER);
     } else if (&guid == &DIPROP_AXISMODE) {
