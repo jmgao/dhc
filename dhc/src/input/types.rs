@@ -10,6 +10,10 @@ impl Axis {
   }
 
   pub fn set_value(&mut self, value: f32) {
+    if value < 0.0 || value > 1.0 {
+      panic!("invalid axis value: {}", value);
+    }
+
     self.0 = value;
   }
 }
