@@ -313,8 +313,8 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
                           const DIPROPHEADER* prop_header) {
     switch (prop_header->dwHow) {
       case DIPH_DEVICE:
-        LOG(DEBUG) << "FindPropertyObject(DIPH_DEVICE)";
-        return true;
+        LOG(WARNING) << "FindPropertyObject(DIPH_DEVICE)";
+        return false;
 
       case DIPH_BYOFFSET:
         LOG(DEBUG) << "FindPropertyObject(DIPH_BYOFFSET(" << prop_header->dwObj << ")";
@@ -353,6 +353,38 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     if (prop_header->dwHeaderSize != sizeof(DIPROPHEADER)) {
       LOG(ERROR) << "SetProperty got invalid header size: " << prop_header->dwHeaderSize;
       return DIERR_INVALIDPARAM;
+    }
+
+    // Several properties are device-wide:
+    //    DIPROP_AUTOCENTER, DIPROP_AXISMODE, DIPROP_BUFFERSIZE, DIPROP_FFGAIN,
+    //    DIPROP_INSTANCENAME, DIPROP_PRODUCTNAME
+#define DEVICE_PROPERTY(name)                                                                 \
+  do {                                                                                        \
+    if (prop_header->dwHow != DIPH_DEVICE) {                                                  \
+      LOG(WARNING) << "SetProperty(" << #name << ") called with invalid dwHow"; \
+      return DIERR_INVALIDPARAM;                                                              \
+    }                                                                                         \
+  } while (0)
+
+#define UNIMPLEMENTED_DEVICE_PROPERTY(name)         \
+  do {                                              \
+    DEVICE_PROPERTY(name);                          \
+    UNIMPLEMENTED(FATAL) << #name " unimplemented"; \
+  } while (0)
+
+    if (&guid == &DIPROP_AUTOCENTER) {
+      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_AUTOCENTER);
+    } else if (&guid == &DIPROP_AXISMODE) {
+      LOG(WARNING) << "DIPROP_AXISMODE unimplemented";
+      return DI_OK;
+    } else if (&guid == &DIPROP_BUFFERSIZE) {
+      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_BUFFERSIZE);
+    } else if (&guid == &DIPROP_FFGAIN) {
+      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_FFGAIN);
+    } else if (&guid == &DIPROP_INSTANCENAME) {
+      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_INSTANCENAME);
+    } else if (&guid == &DIPROP_PRODUCTNAME) {
+      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_PRODUCTNAME);
     }
 
     // Find the object that's referenced.
