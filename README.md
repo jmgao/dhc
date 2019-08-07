@@ -11,7 +11,10 @@ controllers onto the virtual controllers as they are plugged in.
 ### Installation
 
 Download [the latest release](https://github.com/jmgao/dhc/releases) and place
-the appropriate DLLs in the same folder as the game you want to use dhc with.
+the appropriate DLLs in the same folder as the game you want to use dhc with (see
+[the wiki](https://github.com/jmgao/dhc/wiki/Compatibility) for a table with which
+architecture to use).
+
 Note that the game binary might be not be the one that's at the top level of
 the game's directory: if you don't see dhc.log or dhc.toml files being created
 after you start the game, you probably chose the wrong one. You can right click
