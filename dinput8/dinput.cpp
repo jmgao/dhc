@@ -322,11 +322,6 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     return "<unknown>";
   }
 
-  virtual HRESULT STDMETHODCALLTYPE GetProperty(REFGUID guid, DIPROPHEADER*) override final {
-    UNIMPLEMENTED(FATAL) << "GetProperty(" << GetDIPropName(guid) << ") unimplemented";
-    return DIERR_NOTINITIALIZED;
-  }
-
   bool FindPropertyObject(observer_ptr<EmulatedDeviceObject>* out_object,
                           const DIPROPHEADER* prop_header) {
     switch (prop_header->dwHow) {
@@ -365,6 +360,72 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
     __builtin_unreachable();
   }
+
+  virtual HRESULT STDMETHODCALLTYPE GetProperty(REFGUID guid, DIPROPHEADER* prop_header) override final {
+    // Several properties are device-wide:
+    //    DIPROP_AUTOCENTER, DIPROP_AXISMODE, DIPROP_BUFFERSIZE, DIPROP_FFGAIN,
+    //    DIPROP_INSTANCENAME, DIPROP_PRODUCTNAME
+    if (&guid == &DIPROP_AUTOCENTER) {
+      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_AUTOCENTER);
+    } else if (&guid == &DIPROP_AXISMODE) {
+      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_BUFFERSIZE);
+    } else if (&guid == &DIPROP_BUFFERSIZE) {
+      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_BUFFERSIZE);
+    } else if (&guid == &DIPROP_FFGAIN) {
+      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_FFGAIN);
+    } else if (&guid == &DIPROP_INSTANCENAME) {
+      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_INSTANCENAME);
+    } else if (&guid == &DIPROP_PRODUCTNAME) {
+      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_PRODUCTNAME);
+    }
+
+    // Find the object that's referenced.
+    observer_ptr<EmulatedDeviceObject> object;
+    if (!FindPropertyObject(&object, prop_header)) {
+      LOG(ERROR) << "EmulatedDirectInput8Device::GetProperty(" << GetDIPropName(guid)
+                 << ") failed to find object";
+      return DIERR_OBJECTNOTFOUND;
+    }
+
+    LOG(DEBUG) << "EmulatedDirectInput8Device::GetProperty(" << GetDIPropName(guid) << ", "
+               << object->name << ")";
+
+    // These aren't equivalent to `guid == DIPROP_FOO`, because fuck you, that's why.
+    if (&guid == &DIPROP_DEADZONE || &guid == &DIPROP_SATURATION) {
+      if (prop_header->dwSize != sizeof(DIPROPDWORD)) return DIERR_INVALIDPARAM;
+      if (!(object->type & DIDFT_AXIS)) return DIERR_INVALIDPARAM;
+      DWORD* value = &reinterpret_cast<DIPROPDWORD*>(prop_header)->dwData;
+      if (&guid == &DIPROP_DEADZONE) {
+        *value = object->deadzone * 10000.0;
+        LOG(DEBUG) << "Getting dead zone for axis " << object->name << ": " << *value;
+      } else if (&guid == &DIPROP_SATURATION) {
+        *value = object->saturation * 10000.0;
+        LOG(DEBUG) << "Getting saturation for axis " << object->name << ": " << *value;
+      }
+      return DI_OK;
+    } else if (&guid == &DIPROP_RANGE) {
+      if (!(object->type & DIDFT_AXIS)) {
+        LOG(DEBUG) << "attempted to get DIPROP_RANGE on non-axis";
+        return DIERR_INVALIDPARAM;
+      }
+
+      if (prop_header->dwSize != sizeof(DIPROPRANGE)) {
+        LOG(ERROR) << "dwSize mismatch";
+        return DIERR_INVALIDPARAM;
+      }
+
+      DIPROPRANGE* range = reinterpret_cast<DIPROPRANGE*>(prop_header);
+      // TODO: Should we check that max > min?
+      std::tie(range->lMin, range->lMax) = std::tie(object->range_min, object->range_max);
+      LOG(DEBUG) << "Getting range for axis " << object->name << ": [" << range->lMin << ", "
+                 << range->lMax << "]";
+      return DI_OK;
+    }
+
+    UNIMPLEMENTED(FATAL) << "GetProperty(" << GetDIPropName(guid) << ") unimplemented";
+    return DIERR_NOTINITIALIZED;
+  }
+
 
   virtual HRESULT STDMETHODCALLTYPE SetProperty(REFGUID guid,
                                                 const DIPROPHEADER* prop_header) override final {
