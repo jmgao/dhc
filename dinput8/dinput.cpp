@@ -368,7 +368,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     if (&guid == &DIPROP_AUTOCENTER) {
       UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_AUTOCENTER);
     } else if (&guid == &DIPROP_AXISMODE) {
-      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_BUFFERSIZE);
+      UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_AXISMODE);
     } else if (&guid == &DIPROP_BUFFERSIZE) {
       UNIMPLEMENTED_DEVICE_PROPERTY(DIPROP_BUFFERSIZE);
     } else if (&guid == &DIPROP_FFGAIN) {
