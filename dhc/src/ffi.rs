@@ -44,16 +44,16 @@ pub extern "C" fn dhc_get_inputs(index: usize) -> DeviceInputs {
 }
 
 #[no_mangle]
-pub extern "C" fn dhc_get_axis(inputs: DeviceInputs, axis_type: AxisType) -> Axis {
-  inputs.get_axis(axis_type)
+pub unsafe extern "C" fn dhc_get_axis(inputs: *const DeviceInputs, axis_type: AxisType) -> f64 {
+  (*inputs).get_axis(axis_type).get().into()
 }
 
 #[no_mangle]
-pub extern "C" fn dhc_get_button(inputs: DeviceInputs, button_type: ButtonType) -> Button {
-  inputs.get_button(button_type)
+pub unsafe extern "C" fn dhc_get_button(inputs: *const DeviceInputs, button_type: ButtonType) -> bool {
+  (*inputs).get_button(button_type).get()
 }
 
 #[no_mangle]
-pub extern "C" fn dhc_get_hat(inputs: DeviceInputs, hat_type: HatType) -> Hat {
-  inputs.get_hat(hat_type)
+pub unsafe extern "C" fn dhc_get_hat(inputs: *const DeviceInputs, hat_type: HatType) -> Hat {
+  (*inputs).get_hat(hat_type)
 }

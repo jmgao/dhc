@@ -798,8 +798,7 @@ void DeviceFormat::Apply(char* output_buffer, size_t output_buffer_length,
           CHECK(object->type & DIDFT_AXIS);
           CHECK_EQ(0ULL, offset % 4);
           CHECK_GE(output_buffer_length, offset + 4);
-          auto axis = dhc_get_axis(inputs, arg);
-          double value = axis._0;
+          auto value = dhc_get_axis(&inputs, arg);
           double distance = abs(value - 0.5);
           if (distance * 2 >= object->saturation) {
             value = value > 0.5 ? 1.0 : 0.0;
@@ -815,13 +814,13 @@ void DeviceFormat::Apply(char* output_buffer, size_t output_buffer_length,
         } else if constexpr (std::is_same_v<T, ButtonType>) {
           CHECK(object->type & DIDFT_BUTTON);
           CHECK_GE(output_buffer_length, offset + 1);
-          auto value = dhc_get_button(inputs, arg)._0;
+          auto value = dhc_get_button(&inputs, arg);
           output_buffer[offset] = value ? -128 : 0;
         } else if constexpr (std::is_same_v<T, HatType>) {
           CHECK(object->type & DIDFT_POV);
           CHECK_EQ(0ULL, offset % 4);
           CHECK_GE(output_buffer_length, offset + 4);
-          auto hat = dhc_get_hat(inputs, arg);
+          auto hat = dhc_get_hat(&inputs, arg);
           DWORD value = 0;
           switch (hat) {
           case Hat::Neutral:
