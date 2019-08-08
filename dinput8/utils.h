@@ -2,6 +2,8 @@
 
 #include <dinput.h>
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 #include <wchar.h>
 
@@ -55,6 +57,9 @@ inline wchar_t* tstrncpy(wchar_t* dst, const char* src, size_t len) {
 inline char* tstrncpy(char* dst, const char* src, size_t len) {
   return strncpy(dst, src, len);
 }
+
+ssize_t tsnprintf(char* dst, size_t len, const char* fmt, ...) __attribute__((format(printf, 3, 4)));
+ssize_t tsnprintf(wchar_t* dst, size_t len, const char* fmt, ...) __attribute__((format(printf, 3, 4)));
 
 // Windows junk.
 // See https://blogs.msdn.microsoft.com/oldnewthing/20041025-00/?p=37483

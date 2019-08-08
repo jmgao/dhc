@@ -2,6 +2,7 @@
 
 #include <dinput.h>
 
+#include <optional>
 #include <variant>
 #include <vector>
 
@@ -12,25 +13,8 @@
 
 namespace dhc {
 
-constexpr GUID GUID_DHC_P1 = {
-  0xdead571c,
-  0x4efc,
-  0x9fa7,
-  {
-    0x9a, 0x7e, 0x8d, 0x10,
-    0x00, 0x00, 0x00, 0x01
-  }
-};
-
-constexpr GUID GUID_DHC_P2 = {
-  0xdead571c,
-  0x4efc,
-  0x9fa7,
-  {
-    0x9a, 0x7e, 0x8d, 0x10,
-    0x00, 0x00, 0x00, 0x02
-  }
-};
+std::optional<uintptr_t> parse_dhc_guid(REFGUID guid);
+GUID create_dhc_guid(uintptr_t index);
 
 template <typename T>
 struct DI8Types;

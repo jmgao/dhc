@@ -5,6 +5,7 @@
 #include <dinput.h>
 
 #include <deque>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <variant>
@@ -42,8 +43,9 @@ template <typename CharType>
 class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
  public:
   explicit EmulatedDirectInput8(com_ptr<DI8Interface<CharType>> real) : real_(std::move(real)) {
-    p1_.reset(new EmulatedDirectInputDevice8<CharType>(0));
-    p2_.reset(new EmulatedDirectInputDevice8<CharType>(1));
+    for (size_t i = 0; i < dhc_get_device_count(); ++i) {
+      devices_.emplace_back(new EmulatedDirectInputDevice8<CharType>(i));
+    }
   }
 
   virtual ~EmulatedDirectInput8() = default;
@@ -78,9 +80,9 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
       return real_->CreateDevice(refguid, device, unknown);
     }
 
-    if (refguid == GUID_DHC_P1 || refguid == GUID_DHC_P2) {
-      bool is_p1 = refguid == GUID_DHC_P1;
-      *device = (is_p1 ? p1_ : p2_).clone().release();
+    std::optional<uintptr_t> dhc_idx = parse_dhc_guid(refguid);
+    if (dhc_idx) {
+      *device = this->devices_[*dhc_idx].clone().release();
       return DI_OK;
     }
 
@@ -145,8 +147,8 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
     if (enum_sticks) {
       DI8DeviceInstance<CharType> dev = {};
       dev.dwSize = sizeof(dev);
-      for (auto& device : {&p1_, &p2_}) {
-        if (device->get()->GetDeviceInfo(&dev) != DI_OK) {
+      for (auto& device : devices_) {
+        if (device->GetDeviceInfo(&dev) != DI_OK) {
           LOG(FATAL) << "GetDeviceInfo returned failure";
         }
 
@@ -203,14 +205,13 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
 
  private:
   com_ptr<DI8Interface<CharType>> real_;
-  com_ptr<EmulatedDirectInputDevice8<CharType>> p1_;
-  com_ptr<EmulatedDirectInputDevice8<CharType>> p2_;
+  std::vector<com_ptr<EmulatedDirectInputDevice8<CharType>>> devices_;
 };
 
 template <typename CharType>
 class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>> {
  public:
-  explicit EmulatedDirectInputDevice8(uintptr_t vdev_idx) : vdev_(vdev_idx) {
+  explicit EmulatedDirectInputDevice8(uintptr_t vdev_idx) : vdev_(vdev_idx), guid_(create_dhc_guid(vdev_)) {
     objects_ = GeneratePS4EmulatedDeviceObjects();
   }
 
@@ -593,22 +594,10 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     memset(device_instance, 0, device_instance->dwSize);
     device_instance->dwSize = sizeof(*device_instance);
     device_instance->dwDevType = DI8DEVTYPE_GAMEPAD | (DI8DEVTYPEGAMEPAD_STANDARD << 8);
-
-    // TODO: Generalize to arbitrary number of devices.
-    const char* name = nullptr;
-    if (this->vdev_ == 0) {
-      device_instance->guidInstance = GUID_DHC_P1;
-      device_instance->guidProduct = GUID_DHC_P1;
-      name = "DHC P1";
-    } else if (this->vdev_ == 1) {
-      device_instance->guidInstance = GUID_DHC_P2;
-      device_instance->guidProduct = GUID_DHC_P2;
-      name = "DHC P2";
-    } else {
-      LOG(FATAL) << "P3+ unimplemented";
-    }
-    tstrncpy(device_instance->tszInstanceName, name, MAX_PATH);
-    tstrncpy(device_instance->tszProductName, name, MAX_PATH);
+    device_instance->guidInstance = this->guid_;
+    device_instance->guidProduct = this->guid_;
+    tsnprintf(device_instance->tszInstanceName, MAX_PATH, "DHC P%ld", static_cast<long>(this->vdev_ + 1));
+    tsnprintf(device_instance->tszProductName, MAX_PATH, "DHC P%ld", static_cast<long>(this->vdev_ + 1));
     return DI_OK;
   }
 
@@ -707,6 +696,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
  private:
   uintptr_t vdev_;
+  GUID guid_;
   std::vector<DIOBJECTDATAFORMAT> object_data_format_;
   std::vector<EmulatedDeviceObject> objects_;
   std::vector<DeviceFormat> device_formats_;

@@ -6,6 +6,7 @@
 #include <codecvt>
 #include <deque>
 #include <locale>
+#include <optional>
 #include <string>
 
 #include "dhc/dhc.h"
@@ -16,6 +17,35 @@
 using namespace std::string_literals;
 
 namespace dhc {
+
+static constexpr GUID dhc_template = {
+  0xdead571c,
+  0x4efc,
+  0x9fa7,
+  {
+    0x9a, 0x7e, 0x8d, 0x10,
+    0x00, 0x00, 0x00, 0x00
+  }
+};
+
+std::optional<uintptr_t> parse_dhc_guid(REFGUID guid) {
+  GUID guid_copy = guid;
+  memset(guid_copy.Data4 + 4, 0, 4);
+  if (memcmp(&dhc_template, &guid_copy, sizeof(guid_copy)) != 0) {
+    return {};
+  }
+
+  uint32_t value;
+  memcpy(&value, guid.Data4 + 4, 4);
+  return { _byteswap_ulong(value) };
+}
+
+GUID create_dhc_guid(uintptr_t index) {
+  GUID result = dhc_template;
+  uint32_t bytes = _byteswap_ulong(index);
+  memcpy(result.Data4 + 4, &bytes, 4);
+  return result;
+}
 
 static std::wstring GetSystemDirectory() {
   std::wstring system_directory(MAX_PATH, L'\0');
@@ -55,6 +85,23 @@ std::wstring to_wstring(const std::wstring& wstr) {
   return wstr;
 }
 
+ssize_t tsnprintf(char* dst, size_t len, const char* fmt, ...) {
+  va_list vl;
+  va_start(vl, fmt);
+  ssize_t result = vsnprintf(dst, len, fmt, vl);
+  va_end(vl);
+  return result;
+}
+
+ssize_t tsnprintf(wchar_t* dst, size_t len, const char* fmt, ...) {
+  va_list vl;
+  va_start(vl, fmt);
+  std::wstring wfmt = to_wstring(fmt);
+  ssize_t result = _vsnwprintf(dst, len, wfmt.c_str(), vl);
+  va_end(vl);
+  return result;
+}
+
 std::string_view dierr_to_string(HRESULT result) {
   switch (result) {
     case DI_OK:
@@ -75,14 +122,12 @@ std::string_view dierr_to_string(HRESULT result) {
 }
 
 std::string to_string(REFGUID guid) {
-  if (guid == GUID_SysKeyboard) {
+  if (std::optional<uintptr_t> dhc_idx = parse_dhc_guid(guid); dhc_idx) {
+    return std::string("GUID_DHC_P") + std::to_string(*dhc_idx + 1);
+  } else if (guid == GUID_SysKeyboard) {
     return "GUID_SysKeyboard";
   } else if (guid == GUID_SysMouse) {
     return "GUID_SysMouse";
-  } else if (guid == GUID_DHC_P1) {
-    return "GUID_DHC_P1";
-  } else if (guid == GUID_DHC_P2) {
-    return "GUID_DHC_P2";
   } else if (guid == GUID_XAxis) {
     return "GUID_XAxis";
   } else if (guid == GUID_YAxis) {
