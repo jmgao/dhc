@@ -82,11 +82,12 @@ class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
 
     std::optional<uintptr_t> dhc_idx = parse_dhc_guid(refguid);
     if (dhc_idx) {
+      LOG(INFO) << "DirectInput8::CreateDevice(" << to_string(refguid) << ") = success";
       *device = this->devices_[*dhc_idx].clone().release();
       return DI_OK;
     }
 
-    LOG(DEBUG) << "DirectInput8::CreateDevice(" << to_string(refguid) << ") = DIERR_DEVICENOTREG";
+    LOG(WARNING) << "DirectInput8::CreateDevice(" << to_string(refguid) << ") = DIERR_DEVICENOTREG";
     *device = nullptr;
     return DIERR_DEVICENOTREG;
   }
@@ -330,7 +331,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
         return false;
 
       case DIPH_BYOFFSET:
-        LOG(DEBUG) << "FindPropertyObject(DIPH_BYOFFSET(" << prop_header->dwObj << ")";
+        LOG(DEBUG) << "FindPropertyObject(DIPH_BYOFFSET(" << prop_header->dwObj << "))";
         for (const auto& format : device_formats_) {
           if (format.offset == prop_header->dwObj) {
             *out_object = format.object;
@@ -648,6 +649,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
     LOG(VERBOSE) << "EmulatedDirectInput8Device::GetDeviceInfo";
 
     if (device_instance->dwSize != sizeof(*device_instance)) {
+      LOG(ERROR) << "EmulatedDirectInputDevice8::GetDeviceInfo failed due to wrong size: " << device_instance->dwSize;
       return DIERR_INVALIDPARAM;
     }
 
@@ -673,30 +675,36 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
   virtual HRESULT STDMETHODCALLTYPE CreateEffect(REFGUID, const DIEFFECT*, IDirectInputEffect**,
                                                  IUnknown*) override final {
+    UNIMPLEMENTED(WARNING);
     return DIERR_DEVICEFULL;
   }
 
   using EnumEffectsCallback = BOOL(PASCAL*)(const DI8EffectInfo<CharType>*, void*);
   virtual HRESULT STDMETHODCALLTYPE EnumEffects(EnumEffectsCallback, void*, DWORD) override final {
+    UNIMPLEMENTED(WARNING);
     return DI_OK;
   }
 
   virtual HRESULT STDMETHODCALLTYPE GetEffectInfo(DI8EffectInfo<CharType>*,
                                                   REFGUID) override final {
+    UNIMPLEMENTED(WARNING);
     return E_POINTER;
   }
 
   virtual HRESULT STDMETHODCALLTYPE GetForceFeedbackState(DWORD*) override final {
+    UNIMPLEMENTED(WARNING);
     return DIERR_UNSUPPORTED;
   }
 
   virtual HRESULT STDMETHODCALLTYPE SendForceFeedbackCommand(DWORD) override final {
+    UNIMPLEMENTED(WARNING);
     return DIERR_UNSUPPORTED;
   }
 
   using EnumCreatedEffectObjectsCallback = BOOL(PASCAL*)(IDirectInputEffect*, void*);
   virtual HRESULT STDMETHODCALLTYPE EnumCreatedEffectObjects(EnumCreatedEffectObjectsCallback,
                                                              void*, DWORD) override final {
+    UNIMPLEMENTED(WARNING);
     return DI_OK;
   }
 
