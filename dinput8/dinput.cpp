@@ -504,7 +504,6 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
   }
 
   virtual HRESULT STDMETHODCALLTYPE Acquire() override final {
-    LOG(WARNING) << "Acquire unimplemented";
     return DI_OK;
   }
 
