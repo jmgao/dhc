@@ -674,37 +674,31 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
 
   virtual HRESULT STDMETHODCALLTYPE CreateEffect(REFGUID, const DIEFFECT*, IDirectInputEffect**,
                                                  IUnknown*) override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+    return DIERR_DEVICEFULL;
   }
 
   using EnumEffectsCallback = BOOL(PASCAL*)(const DI8EffectInfo<CharType>*, void*);
   virtual HRESULT STDMETHODCALLTYPE EnumEffects(EnumEffectsCallback, void*, DWORD) override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+    return DI_OK;
   }
 
   virtual HRESULT STDMETHODCALLTYPE GetEffectInfo(DI8EffectInfo<CharType>*,
                                                   REFGUID) override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+    return E_POINTER;
   }
 
   virtual HRESULT STDMETHODCALLTYPE GetForceFeedbackState(DWORD*) override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+    return DIERR_UNSUPPORTED;
   }
 
   virtual HRESULT STDMETHODCALLTYPE SendForceFeedbackCommand(DWORD) override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+    return DIERR_UNSUPPORTED;
   }
 
   using EnumCreatedEffectObjectsCallback = BOOL(PASCAL*)(IDirectInputEffect*, void*);
   virtual HRESULT STDMETHODCALLTYPE EnumCreatedEffectObjects(EnumCreatedEffectObjectsCallback,
                                                              void*, DWORD) override final {
-    UNIMPLEMENTED(FATAL);
-    return DIERR_NOTINITIALIZED;
+    return DI_OK;
   }
 
   virtual HRESULT STDMETHODCALLTYPE Escape(DIEFFESCAPE*) override final {
