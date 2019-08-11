@@ -43,8 +43,10 @@ template <typename CharType>
 class EmulatedDirectInput8 : public com_base<DI8Interface<CharType>> {
  public:
   explicit EmulatedDirectInput8(com_ptr<DI8Interface<CharType>> real) : real_(std::move(real)) {
-    for (size_t i = 0; i < dhc_get_device_count(); ++i) {
-      devices_.emplace_back(new EmulatedDirectInputDevice8<CharType>(i));
+    if (!dhc_xinput_is_enabled()) {
+      for (size_t i = 0; i < dhc_get_device_count(); ++i) {
+        devices_.emplace_back(new EmulatedDirectInputDevice8<CharType>(i));
+      }
     }
   }
 
