@@ -81,10 +81,7 @@ lazy_static! {
   static ref LOGGER: Mutex<Option<slog_scope::GlobalLoggerGuard>> = Mutex::new(None);
 }
 
-pub fn init(config: Option<&Config>) {
-  let defaults = Config::default();
-  let config = config.unwrap_or(&defaults);
-
+pub fn init(config: &Config) {
   if config.console {
     unsafe { AllocConsole() };
   }

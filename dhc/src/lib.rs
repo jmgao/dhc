@@ -4,6 +4,9 @@ extern crate log;
 #[macro_use]
 extern crate lazy_static;
 
+#[macro_use]
+extern crate indoc;
+
 extern crate winapi;
 use winapi::shared::minwindef::MAX_PATH;
 use winapi::um::libloaderapi::{GetModuleFileNameW, GetModuleHandleW};
@@ -34,14 +37,11 @@ lazy_static! {
   };
 
   static ref CONFIG: Config = {
-    match *CONFIG_RESULT {
-      Ok(ref cfg) => cfg.clone(),
-      Err(_) => Config::default(),
-    }
+    CONFIG_RESULT.as_ref().expect("failed to open or create configuration file").clone()
   };
 
   static ref CONTEXT: Context = {
-    Context::new(CONFIG.device_count, CONFIG.xinput_enabled)
+    Context::new(CONFIG.device_count, CONFIG.mode == config::EmulationMode::XInput)
   };
 }
 
@@ -58,7 +58,7 @@ fn get_executable_path() -> String {
 
 pub fn init() {
   ONCE.call_once(|| {
-    logger::init(Some(&CONFIG));
+    logger::init(&CONFIG);
 
     info!(
       "dhc v{}-{} ({}) initialized",
