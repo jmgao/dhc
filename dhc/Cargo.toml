@@ -31,7 +31,7 @@ slog-term = "2.4.0"
 log-panics = "2.0.0"
 
 lazy_static = "1.2.0"
-parking_lot = { version = "0.10" }
+parking_lot = { version = "0.11" }
 triple_buffer = "5.0.0"
 twoway = "0.2.0"
 
