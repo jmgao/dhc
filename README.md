@@ -41,7 +41,7 @@ just use WSL or a Linux VM.
 Install the dependencies:
 ```sh
 sudo apt-get install ninja-build
-sudo apt-get install python3-pip && pip3 install meson
+sudo apt-get install python3-pip && pip3 install bfg9000
 sudo apt-get install mingw-w64
 
 # Install rust

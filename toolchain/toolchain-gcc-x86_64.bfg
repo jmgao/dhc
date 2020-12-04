@@ -1,0 +1,9 @@
+# -*- python -*-
+
+target_platform('winnt', 'x86_64')
+install_dirs(prefix=srcdir.append('dist/x86_64'))
+
+compiler(['x86_64-w64-mingw32-gcc-win32',
+          'x86_64-w64-mingw32-gcc'], 'c')
+compiler(['x86_64-w64-mingw32-g++-win32',
+          'x86_64-w64-mingw32-g++'], 'c++')

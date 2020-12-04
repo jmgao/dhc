@@ -18,8 +18,5 @@ cd $(dirname $(realpath $0))
 
 mkdir i686 x86_64
 
-# HACK: meson complains if we use include_directories on a directory that doesn't exist yet, so...
-mkdir i686/include x86_64/include
-
-(cd i686; meson ../.. --cross-file ../../toolchain/${TOOLCHAIN_PREFIX}-i686.txt)
-(cd x86_64; meson ../.. --cross-file ../../toolchain/${TOOLCHAIN_PREFIX}-x86_64.txt)
+(cd i686; 9k ../.. --toolchain ../../toolchain/${TOOLCHAIN_PREFIX}-i686.bfg)
+(cd x86_64; 9k ../.. --toolchain ../../toolchain/${TOOLCHAIN_PREFIX}-x86_64.bfg)

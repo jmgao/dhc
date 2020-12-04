@@ -1,0 +1,87 @@
+# -*- python -*-
+
+bfg9000_required_version('>=0.6.0')
+
+global_options([
+    opts.std('c++17'),
+    opts.warning('all', 'extra', 'error'),
+
+    # Ignore some annoying useless warnings.
+    '-Wno-unused-parameter',
+
+    # Unfortunately, COM interfaces don't have virtual destructors.
+    '-Wno-non-virtual-dtor',
+
+    # Disable some Windows cruft.
+    '-DWIN32_LEAN_AND_MEAN',
+    '-DNOMINMAX',
+
+    # Enable some Windows cruft.
+    '-D_WIN32_WINNT=0x0600',
+], lang='c++')
+
+if env.builder('c++').flavor == 'clang':
+    global_options([
+        '-Wthread-safety',
+        '-Wthread-safety-negative',
+    ], lang='c++')
+
+global_link_options([
+    '-Wl,--enable-stdcall-fixup',
+    '-static-libgcc',
+    '-static-libstdc++',
+
+    # Strip debug symbols.
+    '-s',
+])
+
+triplet = env.target_platform.arch + '-pc-windows-gnu'
+target_dir = Path('target')
+release_dir = target_dir.append(triplet + '/release')
+dhc_lib, dhc_exe = build_step(
+    ['dhc.dll', 'dhc.exe'],
+    cmds=[
+        ['cargo', 'build', '--manifest-path=' + build_step.input,
+         '--target-dir', target_dir, '--release', '--target', triplet],
+        ['strip', release_dir.append('dhc.dll'), '-o', build_step.output[0]],
+        ['strip', release_dir.append('dhc.exe'), '-o', build_step.output[1]],
+    ],
+    files='dhc/Cargo.toml',
+    type=[shared_library, executable],
+    always_outdated=True
+)
+
+dhc_h = build_step(
+    'include',
+    cmds=[
+        # This could be replaced with:
+        #   env.tool('mkdir_p')(build_step.output + '/dhc')
+        # which works on Windows too. But that's not actually documented...
+        ['mkdir', '-p', build_step.output + '/dhc'],
+        ['cbindgen', build_step.input, '-o', build_step.output + '/dhc/dhc.h'],
+    ],
+    files='dhc',
+    type=header_directory,
+    always_outdated=True
+)
+
+dinput = shared_library(
+    'dinput8',
+    files=find_files('dinput8/**/*.cpp', extra='*.h'),
+    module_defs='dinput8/dinput8.def',
+    includes=['dhc/include', dhc_h],
+    libs=dhc_lib
+)
+
+uuid = package('uuid')
+
+xinput = shared_library(
+    'xinput1_3',
+    files=find_files('xinput1_3/**/*.cpp'),
+    module_defs='xinput1_3/xinput1_3.def',
+    includes=['dhc/include', dhc_h],
+    libs=dhc_lib,
+    packages=uuid,
+)
+
+install(dhc_lib, dinput, xinput)
