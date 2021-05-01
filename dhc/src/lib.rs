@@ -271,6 +271,13 @@ impl Context {
 }
 
 pub(crate) fn mangle_inputs(inputs: &mut DeviceInputs) {
+  if CONFIG.dpad_override {
+    if inputs.get_hat(HatType::DPad) != Hat::Neutral {
+      inputs.axis_left_stick_x.set_value(0.5);
+      inputs.axis_left_stick_y.set_value(0.5);
+    }
+  }
+
   if let Some(deadzone_config) = &CONFIG.deadzone {
     if deadzone_config.enabled {
       for ref mut axis in &mut [&mut inputs.axis_left_stick_x, &mut inputs.axis_left_stick_y] {

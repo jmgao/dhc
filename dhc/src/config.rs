@@ -23,6 +23,10 @@ static DEFAULT_CONFIG: &str = indoc!(r#"
   # Most games (i.e. any game that supports a PS4 controller) will want "directinput".
   mode = "directinput"
 
+  # Override the left stick with dpad inputs.
+  # This flag emulates console behavior for games such as UNDER NIGHT IN-BIRTH on PS4.
+  dpad_override = false
+
   # Deadzone customization.
   # This allows you to set a threshold for left analog stick values.
   # Any x/y values (from 0 to 1) below it are snapped to the center.
@@ -60,6 +64,7 @@ pub struct Config {
   pub log_level: logger::LogLevel,
   pub device_count: usize,
   pub mode: EmulationMode,
+  pub dpad_override: bool,
   pub deadzone: Option<DeadzoneConfig>,
 }
 
