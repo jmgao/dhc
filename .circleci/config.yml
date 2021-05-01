@@ -12,6 +12,9 @@ jobs:
           name: Generate build files
           command: ./build/generate.sh
       - run:
+          name: Use older version of memchr to prevent build errors
+          command: cargo update -p memchr --precise 2.3.4  
+      - run:
           name: Build 32-bit
           command: ninja -C build/i686 install
       - run:
@@ -32,6 +35,9 @@ jobs:
       - run:
           name: Generate build files
           command: ./build/generate.sh
+      - run:
+          name: Use older version of memchr to prevent build errors
+          command: cargo update -p memchr --precise 2.3.4  
       - run:
           name: Build 64-bit
           command: ninja -C build/x86_64 install

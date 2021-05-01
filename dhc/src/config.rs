@@ -23,6 +23,11 @@ static DEFAULT_CONFIG: &str = indoc!(r#"
   # Most games (i.e. any game that supports a PS4 controller) will want "directinput".
   mode = "directinput"
 
+
+  # This flag when enabled will make the dpad take priority over left stick
+  # to better emulate console behavior for games like PS4 UNI
+  dpad_override = false
+
   # Deadzone customization.
   # This allows you to set a threshold for left analog stick values.
   # Any x/y values (from 0 to 1) below it are snapped to the center.
@@ -31,10 +36,6 @@ static DEFAULT_CONFIG: &str = indoc!(r#"
   [deadzone]
   enabled = false
   threshold = 0.5
-  
-  # This flag when enabled will make the dpad take priority over left stick
-  # to better emulate console behavior for games like PS4 UNI
-  dpad_override = false
 "#);
 
 #[repr(C)]
@@ -64,8 +65,8 @@ pub struct Config {
   pub log_level: logger::LogLevel,
   pub device_count: usize,
   pub mode: EmulationMode,
-  pub deadzone: Option<DeadzoneConfig>,
   pub dpad_override: bool,
+  pub deadzone: Option<DeadzoneConfig>,
 }
 
 #[derive(Clone, Deserialize, Debug)]
