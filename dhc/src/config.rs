@@ -31,6 +31,10 @@ static DEFAULT_CONFIG: &str = indoc!(r#"
   [deadzone]
   enabled = false
   threshold = 0.5
+  
+  # This flag when enabled will make the dpad take priority over left stick
+  # to better emulate console behavior for games like PS4 UNI
+  dpad_override = false
 "#);
 
 #[repr(C)]
@@ -61,6 +65,7 @@ pub struct Config {
   pub device_count: usize,
   pub mode: EmulationMode,
   pub deadzone: Option<DeadzoneConfig>,
+  pub dpad_override: bool,
 }
 
 #[derive(Clone, Deserialize, Debug)]

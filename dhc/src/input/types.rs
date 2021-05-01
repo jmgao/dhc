@@ -71,7 +71,7 @@ pub enum ButtonType {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug,PartialEq, Eq)]
 pub enum Hat {
   Neutral,
   North,
