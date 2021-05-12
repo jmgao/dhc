@@ -1,5 +1,6 @@
 use std::ffi::CString;
 use std::fmt::Write;
+use std::mem::MaybeUninit;
 use std::io;
 
 use winapi::shared::hidpi::{
@@ -118,7 +119,7 @@ impl std::error::Error for HidPError {
     "HID error"
   }
 
-  fn cause(&self) -> Option<&std::error::Error> {
+  fn cause(&self) -> Option<&dyn std::error::Error> {
     None
   }
 }
@@ -147,7 +148,7 @@ impl HidPreparsedData {
   }
 
   fn get_caps(&self) -> Result<HIDP_CAPS, HidPError> {
-    let mut caps = unsafe { std::mem::uninitialized() };
+    let mut caps = unsafe { MaybeUninit::uninit().assume_init() };
     let rc = unsafe { HidP_GetCaps(self.raw(), &mut caps) };
     let result = hidp_result(rc);
     result.and(Ok(caps))

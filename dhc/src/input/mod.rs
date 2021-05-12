@@ -1,5 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
+use std::mem::MaybeUninit;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::mpsc::{channel, Sender};
@@ -242,7 +243,7 @@ impl RawInputManager {
 
   fn handle_device_input(&mut self, _hwnd: HWND, hrawinput: HRAWINPUT) {
     // TODO: Switch to GetRawInputBuffer?
-    let mut buffer = unsafe { std::mem::uninitialized::<AlignedBuffer>() };
+    let mut buffer = unsafe { MaybeUninit::uninit().assume_init() };
     let mut size = std::mem::size_of_val(&buffer) as u32;
     let result = unsafe {
       GetRawInputData(
