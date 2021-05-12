@@ -1,9 +1,9 @@
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::mem::MaybeUninit;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::mpsc::{channel, Sender};
+use std::sync::Arc;
 
 use parking_lot::Mutex;
 

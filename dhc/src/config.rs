@@ -7,7 +7,8 @@ use serde::{Deserialize, Deserializer};
 
 use crate::logger;
 
-static DEFAULT_CONFIG: &str = indoc!(r#"
+static DEFAULT_CONFIG: &str = indoc!(
+  r#"
   # Control the level of verbosity of logging.
   # Valid values are: "trace", "debug", "info", "warn", "error", "fatal"
   log_level = "info"
@@ -35,7 +36,8 @@ static DEFAULT_CONFIG: &str = indoc!(r#"
   [deadzone]
   enabled = false
   threshold = 0.5
-"#);
+"#
+);
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Debug)]

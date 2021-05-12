@@ -1,7 +1,7 @@
 use std::ffi::CString;
 use std::fmt::Write;
-use std::mem::MaybeUninit;
 use std::io;
+use std::mem::MaybeUninit;
 
 use winapi::shared::hidpi::{
   HidP_GetCaps, HidP_GetLinkCollectionNodes, HidP_GetUsageValue, HidP_GetUsages, HidP_GetValueCaps,

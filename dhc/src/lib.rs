@@ -42,14 +42,13 @@ lazy_static! {
     path.push("dhc.toml");
     Config::read(&path)
   };
-
   static ref CONFIG: Config = {
-    CONFIG_RESULT.as_ref().expect("failed to open or create configuration file").clone()
+    CONFIG_RESULT
+      .as_ref()
+      .expect("failed to open or create configuration file")
+      .clone()
   };
-
-  static ref CONTEXT: Context = {
-    Context::new(CONFIG.device_count, CONFIG.mode == config::EmulationMode::XInput)
-  };
+  static ref CONTEXT: Context = { Context::new(CONFIG.device_count, CONFIG.mode == config::EmulationMode::XInput) };
 }
 
 fn get_executable_path() -> String {
