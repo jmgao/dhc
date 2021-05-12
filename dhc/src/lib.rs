@@ -68,10 +68,9 @@ pub fn init() {
     logger::init(&CONFIG);
 
     info!(
-      "dhc v{}-{} ({}) initialized",
-      env!("CARGO_PKG_VERSION"),
-      env!("VERGEN_SHA_SHORT"),
-      env!("VERGEN_COMMIT_DATE")
+      "dhc {} ({}) initialized",
+      env!("VERGEN_GIT_SEMVER"),
+      env!("VERGEN_GIT_COMMIT_DATE")
     );
 
     // We need to wait until the logger has been initialized to warn about this.

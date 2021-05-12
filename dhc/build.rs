@@ -1,3 +1,8 @@
+use vergen::{vergen, Config, TimestampKind};
+
 fn main() {
-  vergen::generate_cargo_keys(vergen::ConstantsFlags::all()).expect("Unable to generate the cargo keys!");
+  let mut config = Config::default();
+  *config.git_mut().commit_timestamp_kind_mut() = TimestampKind::DateOnly;
+
+  vergen(config).expect("vergen failed");
 }
