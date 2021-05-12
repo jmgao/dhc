@@ -282,10 +282,10 @@ FARPROC WINAPI GetDirectInput8Proc(const char* proc_name) {
   return GetProcAddress(real, proc_name);
 }
 
-static HRESULT RealDirectInput8Create(HINSTANCE hinst, DWORD version, REFIID desired_interface,
-                                      void** out_interface, IUnknown* unknown) {
+static HRESULT RealDirectInput8Create(HINSTANCE hinst, DWORD version, REFIID desired_interface, void** out_interface,
+                                      IUnknown* unknown) {
   static auto real =
-      reinterpret_cast<decltype(&DirectInput8Create)>(GetDirectInput8Proc("DirectInput8Create"));
+      reinterpret_cast<decltype(&DirectInput8Create)>(reinterpret_cast<void*>(GetDirectInput8Proc("DirectInput8Create")));
   return real(hinst, version, desired_interface, out_interface, unknown);
 }
 
