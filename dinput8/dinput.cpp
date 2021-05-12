@@ -471,7 +471,7 @@ class EmulatedDirectInputDevice8 : public com_base<DI8DeviceInterface<CharType>>
       if (prop_header->dwSize != sizeof(DIPROPDWORD)) return DIERR_INVALIDPARAM;
       if (!(object->type & DIDFT_AXIS)) return DIERR_INVALIDPARAM;
       DWORD value = reinterpret_cast<const DIPROPDWORD*>(prop_header)->dwData;
-      if (value < 0 || value > 10000) {
+      if (value > 10000) {
         // TODO: Does the reference implementation return an error here?
         return DIERR_INVALIDPARAM;
       }
