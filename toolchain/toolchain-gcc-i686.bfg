@@ -1,0 +1,9 @@
+# -*- python -*-
+
+target_platform('winnt', 'i686')
+install_dirs(prefix=srcdir.append('dist/i686'))
+
+compiler(['i686-w64-mingw32-gcc-win32',
+          'i686-w64-mingw32-gcc'], 'c')
+compiler(['i686-w64-mingw32-g++-win32',
+          'i686-w64-mingw32-g++'], 'c++')
