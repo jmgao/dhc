@@ -1,0 +1,57 @@
+name: build
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    strategy:
+      matrix:
+        target: [i686, x86_64]
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/install@v0.1
+      with:
+        crate: cbindgen
+        version: latest
+        use-tool-cache: true
+
+    - name: Add rust target
+      run: rustup target add ${{ matrix.target }}-pc-windows-gnu
+
+    - name: Install host dependencies
+      run: sudo apt-get install --no-install-recommends -y ninja-build meson mingw-w64
+
+    - name: Generate build files
+      run: ./build/generate.sh
+
+    - name: Build ${{ matrix.target}}
+      run: ninja -C build/${{ matrix.target }} install
+
+    - name: Archive binaries
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.target }}
+        path: dist/${{ matrix.target }}
+
+  package:
+    runs-on: ubuntu-20.04
+    needs: build
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Get version
+      run: echo "GIT_VERSION=$(git describe --tags)" >> $GITHUB_ENV
+
+    - uses: actions/download-artifact@v2
+      with:
+        path: dhc-${{ env.GIT_VERSION }}/dhc
+
+    - name: Archive binaries
+      uses: actions/upload-artifact@v2
+      with:
+        name: dhc-${{ env.GIT_VERSION }}
+        path: dhc-${{ env.GIT_VERSION }}
