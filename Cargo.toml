@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "dhc",
-  "rusty-xinput",
 ]
 
 [profile.dev]
