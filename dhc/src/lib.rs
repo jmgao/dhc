@@ -1,3 +1,8 @@
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::manual_range_contains)]
+#![allow(clippy::missing_safety_doc)]
+#![allow(clippy::uninit_assumed_init)]
+
 #[macro_use]
 extern crate log;
 

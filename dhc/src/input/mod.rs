@@ -399,7 +399,7 @@ impl Context {
     let manager = RawInputManager::new(Arc::clone(&events_pending));
     Context {
       eventloop: HwndLoop::new(Box::new(manager)),
-      events_pending: events_pending,
+      events_pending,
     }
   }
 
