@@ -30,7 +30,7 @@ slog-term = "2.4.0"
 log-panics = "2.0.0"
 
 lazy_static = "1.2.0"
-parking_lot = "0.11"
+parking_lot = "0.12"
 triple_buffer = "5.0.0"
 twoway = "0.2.0"
 
