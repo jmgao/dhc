@@ -31,7 +31,7 @@ log-panics = "2.0.0"
 
 lazy_static = "1.2.0"
 parking_lot = "0.11"
-triple_buffer = "5.0.0"
+triple_buffer = "6.2.0"
 twoway = "0.2.0"
 
 serde = { version = "1.0", features = ["derive"] }
