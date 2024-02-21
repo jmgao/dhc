@@ -31,8 +31,6 @@ mod logger;
 mod input;
 pub use input::types::*;
 
-mod unwind;
-
 static ONCE: Once = Once::new();
 
 lazy_static! {
