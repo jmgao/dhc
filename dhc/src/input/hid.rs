@@ -148,10 +148,10 @@ impl HidPreparsedData {
   }
 
   fn get_caps(&self) -> Result<HIDP_CAPS, HidPError> {
-    let mut caps = unsafe { MaybeUninit::uninit().assume_init() };
-    let rc = unsafe { HidP_GetCaps(self.raw(), &mut caps) };
+    let mut caps = MaybeUninit::<HIDP_CAPS>::uninit();
+    let rc = unsafe { HidP_GetCaps(self.raw(), caps.as_mut_ptr()) };
     let result = hidp_result(rc);
-    result.and(Ok(caps))
+    result.and(Ok(unsafe { caps.assume_init() }))
   }
 
   fn get_value_caps(&self) -> Result<Vec<HIDP_VALUE_CAPS>, HidPError> {
@@ -374,7 +374,7 @@ fn get_rawinput_device_info_impl(device_id: RawInputDeviceId, cmd: UINT) -> Vec<
   };
 
   let mut result = vec![0; size as usize];
-  let ptr = result.as_mut_ptr() as *mut std::ffi::c_void;
+  let ptr = result.as_mut_ptr() as *mut winapi::ctypes::c_void;
   let mut dummy = size as u32;
   let rc = unsafe { GetRawInputDeviceInfoA(device_id.as_handle(), cmd, ptr, &mut dummy) };
   assert!(size >= rc as usize);
@@ -406,7 +406,7 @@ fn hid_get_product_string(handle: HANDLE) -> Option<String> {
   let mut buf: Vec<u16> = vec![0; 512];
   let buf_size = buf.len() * std::mem::size_of::<u16>();
 
-  let ptr = buf.as_mut_ptr() as *mut std::ffi::c_void;
+  let ptr = buf.as_mut_ptr() as *mut winapi::ctypes::c_void;
   let result = unsafe { HidD_GetProductString(handle, ptr, buf_size as u32) };
   if result == 0 {
     error!("HidD_GetProductString failed");
@@ -425,7 +425,7 @@ fn hid_get_manufacturer_string(handle: HANDLE) -> Option<String> {
   let mut buf: Vec<u16> = vec![0; 512];
   let buf_size = buf.len() * std::mem::size_of::<u16>();
 
-  let ptr = buf.as_mut_ptr() as *mut std::ffi::c_void;
+  let ptr = buf.as_mut_ptr() as *mut winapi::ctypes::c_void;
   let result = unsafe { HidD_GetManufacturerString(handle, ptr, buf_size as u32) };
   if result == 0 {
     error!("HidD_GetManufacturerString failed");
@@ -444,7 +444,7 @@ fn hid_get_serial_number(handle: HANDLE) -> Option<String> {
   let mut buf: Vec<u8> = vec![0; 512];
   let buf_size = buf.len() * std::mem::size_of::<u8>();
 
-  let ptr = buf.as_mut_ptr() as *mut std::ffi::c_void;
+  let ptr = buf.as_mut_ptr() as *mut winapi::ctypes::c_void;
   let result = unsafe { HidD_GetSerialNumberString(handle, ptr, buf_size as u32) };
   if result == 0 {
     error!("HidD_GetSerialNumberString failed");

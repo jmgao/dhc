@@ -243,13 +243,13 @@ impl RawInputManager {
 
   fn handle_device_input(&mut self, _hwnd: HWND, hrawinput: HRAWINPUT) {
     // TODO: Switch to GetRawInputBuffer?
-    let mut buffer = unsafe { MaybeUninit::uninit().assume_init() };
+    let mut buffer = MaybeUninit::<AlignedBuffer>::uninit();
     let mut size = std::mem::size_of_val(&buffer) as u32;
     let result = unsafe {
       GetRawInputData(
         hrawinput,
         RID_INPUT,
-        &mut buffer as *mut AlignedBuffer as *mut std::ffi::c_void,
+        buffer.as_mut_ptr() as *mut winapi::ctypes::c_void,
         &mut size,
         std::mem::size_of::<RAWINPUTHEADER>() as UINT,
       )
@@ -260,6 +260,7 @@ impl RawInputManager {
       return;
     }
 
+    let buffer = unsafe { buffer.assume_init() };
     let rawinput = unsafe { *(&buffer as *const AlignedBuffer as *const RAWINPUT) };
     let device_id = RawInputDeviceId::from_handle(rawinput.header.hDevice);
     let device = self.devices.get_mut(&device_id);

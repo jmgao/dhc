@@ -48,7 +48,7 @@ lazy_static! {
       .expect("failed to open or create configuration file")
       .clone()
   };
-  static ref CONTEXT: Context = { Context::new(CONFIG.device_count, CONFIG.mode == config::EmulationMode::XInput) };
+  static ref CONTEXT: Context = Context::new(CONFIG.device_count, CONFIG.mode == config::EmulationMode::XInput);
 }
 
 fn get_executable_path() -> String {
@@ -198,7 +198,7 @@ impl State {
       ref mut real_devices,
     } = *self;
 
-    for mut vdev in virtual_devices.iter_mut() {
+    for vdev in virtual_devices.iter_mut() {
       if let Some(rdev_id) = vdev.binding {
         let real_device_idx = find_real_device(&real_devices, rdev_id).unwrap();
         let rdev = &mut real_devices[real_device_idx];
